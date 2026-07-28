@@ -13,8 +13,8 @@ const lexendDeca = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: "Assignment Marker",
-  description: "AI Literacy assignment marking tool",
+  title: "Marking Assistant",
+  description: "Assistant to help grade learner submissions against Tech Educators Rubrics",
 };
 
 export default function RootLayout({

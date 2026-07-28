@@ -7,8 +7,7 @@
   --brand-secondary: #2ad385;
   --brand-secondary-tint: #e3faf0;
 
-  /* Approximate cream from the brand swatch - swap for the exact hex if you have it. */
-  --background: #faf6ee;
+  --background: #fafafa;
   --foreground: var(--brand-primary);
 }
 

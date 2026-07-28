@@ -83,44 +83,46 @@ export default function MarkingForm() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="course" className="font-medium">
-          Course
-        </label>
-        <select
-          id="course"
-          className="border border-brand-primary/20 rounded-md px-3 py-2 bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
-          value={courseId}
-          onChange={(e) => handleCourseChange(e.target.value)}
-        >
-          {COURSES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="flex flex-col gap-6 rounded-lg p-6 bg-brand-primary text-brand-secondary">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="course" className="font-medium">
+            Course
+          </label>
+          <select
+            id="course"
+            className="border border-brand-secondary/40 rounded-md px-3 py-2 bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+            value={courseId}
+            onChange={(e) => handleCourseChange(e.target.value)}
+          >
+            {COURSES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="assignment" className="font-medium">
-          Assignment
-        </label>
-        <select
-          id="assignment"
-          className="border border-brand-primary/20 rounded-md px-3 py-2 bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
-          value={rubricId}
-          onChange={(e) => {
-            setRubricId(e.target.value);
-            setResult(null);
-          }}
-        >
-          {rubricsForCourse.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.week} — {r.title}
-            </option>
-          ))}
-        </select>
-        <p className="text-sm text-foreground/70">{selectedRubric.overview}</p>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="assignment" className="font-medium">
+            Assignment
+          </label>
+          <select
+            id="assignment"
+            className="border border-brand-secondary/40 rounded-md px-3 py-2 bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+            value={rubricId}
+            onChange={(e) => {
+              setRubricId(e.target.value);
+              setResult(null);
+            }}
+          >
+            {rubricsForCourse.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.week} — {r.title}
+              </option>
+            ))}
+          </select>
+          <p className="text-sm text-brand-secondary/85">{selectedRubric.overview}</p>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -140,28 +142,26 @@ export default function MarkingForm() {
         type="button"
         onClick={handleAnonymise}
         disabled={!rawSubmission.trim()}
-        className="self-start rounded-md border border-brand-primary text-brand-primary dark:text-foreground dark:border-foreground/40 px-4 py-2 font-medium disabled:opacity-40"
+        className="self-start rounded-md bg-brand-primary text-brand-secondary px-4 py-2 font-medium disabled:opacity-40"
       >
         Anonymise
       </button>
 
       {hasAnonymised && (
-        <div className="flex flex-col gap-2 border border-brand-primary/20 rounded-md p-4 bg-brand-primary-tint">
-          <div className="flex items-center justify-between">
-            <label htmlFor="anonymised" className="font-medium">
-              Anonymised preview ({redactionCount} redaction{redactionCount === 1 ? "" : "s"})
-            </label>
-          </div>
+        <div className="flex flex-col gap-2 rounded-md p-4 bg-brand-secondary text-brand-primary">
+          <label htmlFor="anonymised" className="font-medium">
+            Anonymised preview ({redactionCount} redaction{redactionCount === 1 ? "" : "s"})
+          </label>
           <textarea
             id="anonymised"
-            className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-background focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-brand-secondary text-brand-primary placeholder:text-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
             value={anonymisedText}
             onChange={(e) => {
               setAnonymisedText(e.target.value);
               setConfirmedAnonymised(false);
             }}
           />
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm rounded-md px-3 py-2 bg-brand-primary text-brand-secondary w-fit">
             <input
               type="checkbox"
               checked={confirmedAnonymised}
@@ -190,25 +190,23 @@ export default function MarkingForm() {
       )}
 
       {result && (
-        <div className="flex flex-col gap-3 border border-brand-primary/20 rounded-md p-4">
+        <div className="flex flex-col gap-3 rounded-md p-4 bg-brand-secondary text-brand-primary">
           {result.topicMismatch ? (
             <div className="flex flex-col gap-1">
-              <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100 px-3 py-1 text-sm font-medium">
+              <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 px-3 py-1 text-sm font-medium">
                 Possible mismatch
               </span>
               <p className="text-sm">{result.mismatchReason}</p>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-heading font-semibold text-brand-primary dark:text-foreground">
-                {result.mark}/4
-              </span>
+              <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
               {result.borderline && (
-                <span className="inline-block rounded-full bg-brand-secondary-tint text-brand-primary dark:text-foreground px-3 py-1 text-sm font-medium">
+                <span className="inline-block rounded-full bg-brand-primary text-brand-secondary px-3 py-1 text-sm font-medium">
                   Borderline
                 </span>
               )}
-              <span className="text-xs text-foreground/60">(raw score {result.rawScore.toFixed(1)})</span>
+              <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
             </div>
           )}
 

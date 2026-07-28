@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-28 — Colour-blocked brand cards, rename to Marking Assistant
+
+Confirmed `#3F1046` text on `#2AD385` (and the reverse) sits at ~7.8:1 contrast - passes AAA - so switched several panels from tinted/muted brand colours to literal solid blocks:
+
+- Header and the Course/Assignment card: solid `#3F1046` background, `#2AD385` text.
+- Anonymised preview panel: solid `#2AD385` background, `#3F1046` text; the confirmation checkbox sits in a reversed `#3F1046`/`#2AD385` chip within it.
+- Mark output panel: solid `#2AD385` background, `#3F1046` text; the Borderline badge is reversed (`#3F1046` bg / `#2AD385` text) so it stands out against the green panel.
+- Anonymise button: solid `#3F1046` background, `#2AD385` text (was outlined before).
+- Main app background changed from the approximated cream to off-white (`#FAFAFA`).
+- Renamed "Assignment Marker" to "Marking Assistant", subtitle to "Assistant to help grade learner submissions against Tech Educators Rubrics".
+
+Left the mismatch warning badge amber and error text red - those are semantic states, not decorative brand colour, so didn't remap them into the two-colour scheme.
+
 ## 2026-07-28 — Brand styling
 
 Applied brand fonts and colours: **Space Grotesk** for headings, **Lexend Deca** for body text, primary `#3F1046` (deep purple), secondary `#2AD385` (green), defined as CSS variables/Tailwind v4 theme tokens in `app/globals.css` and wired through `MarkingForm.tsx`.
