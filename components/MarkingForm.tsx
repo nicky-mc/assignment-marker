@@ -89,7 +89,7 @@ export default function MarkingForm() {
         </label>
         <select
           id="course"
-          className="border rounded-md px-3 py-2 bg-white dark:bg-zinc-900"
+          className="border border-brand-primary/20 rounded-md px-3 py-2 bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           value={courseId}
           onChange={(e) => handleCourseChange(e.target.value)}
         >
@@ -107,7 +107,7 @@ export default function MarkingForm() {
         </label>
         <select
           id="assignment"
-          className="border rounded-md px-3 py-2 bg-white dark:bg-zinc-900"
+          className="border border-brand-primary/20 rounded-md px-3 py-2 bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           value={rubricId}
           onChange={(e) => {
             setRubricId(e.target.value);
@@ -120,7 +120,7 @@ export default function MarkingForm() {
             </option>
           ))}
         </select>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{selectedRubric.overview}</p>
+        <p className="text-sm text-foreground/70">{selectedRubric.overview}</p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -129,7 +129,7 @@ export default function MarkingForm() {
         </label>
         <textarea
           id="submission"
-          className="border rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-zinc-900"
+          className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           placeholder="Paste the learner's submission here..."
           value={rawSubmission}
           onChange={(e) => handleSubmissionChange(e.target.value)}
@@ -140,13 +140,13 @@ export default function MarkingForm() {
         type="button"
         onClick={handleAnonymise}
         disabled={!rawSubmission.trim()}
-        className="self-start rounded-md border px-4 py-2 font-medium disabled:opacity-40"
+        className="self-start rounded-md border border-brand-primary text-brand-primary dark:text-foreground dark:border-foreground/40 px-4 py-2 font-medium disabled:opacity-40"
       >
         Anonymise
       </button>
 
       {hasAnonymised && (
-        <div className="flex flex-col gap-2 border rounded-md p-4 bg-zinc-50 dark:bg-zinc-900">
+        <div className="flex flex-col gap-2 border border-brand-primary/20 rounded-md p-4 bg-brand-primary-tint">
           <div className="flex items-center justify-between">
             <label htmlFor="anonymised" className="font-medium">
               Anonymised preview ({redactionCount} redaction{redactionCount === 1 ? "" : "s"})
@@ -154,7 +154,7 @@ export default function MarkingForm() {
           </div>
           <textarea
             id="anonymised"
-            className="border rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-zinc-950"
+            className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-background focus:outline-none focus:ring-2 focus:ring-brand-secondary"
             value={anonymisedText}
             onChange={(e) => {
               setAnonymisedText(e.target.value);
@@ -166,6 +166,7 @@ export default function MarkingForm() {
               type="checkbox"
               checked={confirmedAnonymised}
               onChange={(e) => setConfirmedAnonymised(e.target.checked)}
+              className="accent-brand-secondary w-4 h-4"
             />
             I confirm this submission is anonymised and ready to mark.
           </label>
@@ -177,7 +178,7 @@ export default function MarkingForm() {
         onClick={handleMark}
         disabled={markLocked || marking}
         title={markLocked ? "Anonymise the submission and confirm before marking" : undefined}
-        className="self-start rounded-md bg-black text-white dark:bg-white dark:text-black px-4 py-2 font-medium disabled:opacity-40"
+        className="self-start rounded-md bg-brand-primary text-white px-4 py-2 font-medium disabled:opacity-40"
       >
         {marking ? "Marking…" : "Mark"}
       </button>
@@ -189,7 +190,7 @@ export default function MarkingForm() {
       )}
 
       {result && (
-        <div className="flex flex-col gap-3 border rounded-md p-4">
+        <div className="flex flex-col gap-3 border border-brand-primary/20 rounded-md p-4">
           {result.topicMismatch ? (
             <div className="flex flex-col gap-1">
               <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-100 px-3 py-1 text-sm font-medium">
@@ -199,13 +200,15 @@ export default function MarkingForm() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-semibold">{result.mark}/4</span>
+              <span className="text-2xl font-heading font-semibold text-brand-primary dark:text-foreground">
+                {result.mark}/4
+              </span>
               {result.borderline && (
-                <span className="inline-block rounded-full bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 px-3 py-1 text-sm font-medium">
+                <span className="inline-block rounded-full bg-brand-secondary-tint text-brand-primary dark:text-foreground px-3 py-1 text-sm font-medium">
                   Borderline
                 </span>
               )}
-              <span className="text-xs text-zinc-500">(raw score {result.rawScore.toFixed(1)})</span>
+              <span className="text-xs text-foreground/60">(raw score {result.rawScore.toFixed(1)})</span>
             </div>
           )}
 

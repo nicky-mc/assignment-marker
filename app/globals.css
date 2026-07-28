@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand: main #3F1046 (deep purple), secondary #2AD385 (green). */
+  --brand-primary: #3f1046;
+  --brand-primary-tint: #f2e9f5;
+  --brand-secondary: #2ad385;
+  --brand-secondary-tint: #e3faf0;
+
+  /* Approximate cream from the brand swatch - swap for the exact hex if you have it. */
+  --background: #faf6ee;
+  --foreground: var(--brand-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-tint: var(--brand-primary-tint);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-tint: var(--brand-secondary-tint);
+  --font-sans: var(--font-lexend-deca);
+  --font-heading: var(--font-space-grotesk);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1c0a22;
+    --foreground: #f5efe6;
+    --brand-primary-tint: #2b0e33;
+    --brand-secondary-tint: #10301f;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), var(--font-sans), sans-serif;
 }

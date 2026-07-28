@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-28 — Brand styling
+
+Applied brand fonts and colours: **Space Grotesk** for headings, **Lexend Deca** for body text, primary `#3F1046` (deep purple), secondary `#2AD385` (green), defined as CSS variables/Tailwind v4 theme tokens in `app/globals.css` and wired through `MarkingForm.tsx`.
+
+- The background cream and the tint shades used behind badges/panels are approximated from the swatch you shared, since I don't have the exact hex for those - easy to swap in `app/globals.css` if you have them.
+- Colour pairings were chosen for contrast, not just to use both brand colours everywhere: primary purple text on cream/white (very high contrast), white text on primary purple buttons (very high contrast), and the secondary green used as a light tint background with dark purple text for the Borderline badge rather than white-on-green, which tends to fail AA at normal text sizes.
+- Semantic colours (amber for the mismatch warning, red for errors) were left as-is rather than remapped to brand colours, since the brand palette doesn't specify warning/error colours and repurposing an accent colour for "error" risks confusing state with brand identity.
+
 ## 2026-07-28 — Add Digital Marketing with AI course
 
 Added a **Course** dropdown (AI Literacy / Digital Marketing with AI) above the Assignment dropdown; changing course repopulates the assignment list with that course's rubrics and resets the selection to the first one.
