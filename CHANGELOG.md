@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-28: Add Tech Educators logo and favicon
+
+Added the real Tech Educators branding assets, supplied by the user:
+
+- `public/te-logo-light.png` (`TE_Logo_Positive_Green_Small.png`, purple wordmark) shown in light mode.
+- `public/te-logo-dark.png` (`TE_Logo_Negative_Green_Small.png`, green wordmark) shown in dark mode.
+- `app/favicon.ico` replaced with `TE_Monogram_Negative_Green_Small.ico`.
+
+New `components/Logo.tsx` renders both images and toggles visibility with Tailwind's `dark:` variant (this app has no theme toggle, so it follows `prefers-color-scheme` the same way the rest of the app's colours already do). Placed in `app/layout.tsx` as a small header above `{children}`, so it appears top-left on every page, not just the marking form.
+
 ## 2026-07-28: Fix header/card width mismatch
 
 The header card in `page.tsx` sits directly in `<main className="max-w-3xl">`, but `MarkingForm`'s root div independently capped itself at `max-w-2xl`, a narrower width. That made the purple header visibly wider than the Course/Assignment card and everything else below it. Removed the redundant `max-w-2xl` from `MarkingForm` so `<main>`'s width is the only constraint. Verified both cards now measure the same 720px width at the same left edge.

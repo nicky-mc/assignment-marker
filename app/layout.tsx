@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Lexend_Deca } from "next/font/google";
+import Logo from "@/components/Logo";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -27,7 +28,12 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${lexendDeca.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <header className="px-6 py-4">
+          <Logo />
+        </header>
+        {children}
+      </body>
     </html>
   );
 }
