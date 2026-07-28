@@ -29,7 +29,7 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${lexendDeca.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="px-6 pt-4 pb-0">
+        <header className="w-full max-w-3xl mx-auto pt-4 pb-0 pl-12 pr-6">
           <Logo />
         </header>
         {children}

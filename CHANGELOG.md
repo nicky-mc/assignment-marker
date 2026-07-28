@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-28: Align top logo with header card monogram
+
+The top-left wordmark logo lived in a full-width `<header>` with fixed `px-6` padding, while the header card sits inside `<main className="max-w-3xl">`, which centres itself at wide viewports. At 1400px wide that put the logo and the card's monogram 332px apart. Gave the header the same `max-w-3xl mx-auto` constraint as `main`, plus a `pl-12` to also match the card's own `p-6` inset (main's 24px `px-6` plus the card's 24px `p-6` = 48px). Verified both sit at the exact same x position at 800px and 1400px viewport widths.
+
 ## 2026-07-28: Monogram in the header card, tighten logo gap
 
 - Added `public/te-monogram.png` (`TE_Monogram_Negative_Green_Small.png`) inline before the "Marking Assistant" heading in the purple header card. The card's background is fixed purple regardless of theme, so this always uses the light-on-dark ("negative") monogram variant rather than swapping with `prefers-color-scheme`.
