@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-07-28 — Preview textarea + draft-grade reminder
+
+- Anonymised preview: the textarea itself is now white (was blending into the green panel), and the surrounding panel got a thick `#3F1046` border to match the treatment now also added to the Mark output panel, so the two "output" panels read as a matched pair.
+- Added a reminder between the Mark button and the grading panel: "The grade below is a draft — review, edit and personalise it before sharing with the learner." Only shows once a result exists.
+
 ## 2026-07-28 — Colour-blocked brand cards, rename to Marking Assistant
 
 Confirmed `#3F1046` text on `#2AD385` (and the reverse) sits at ~7.8:1 contrast - passes AAA - so switched several panels from tinted/muted brand colours to literal solid blocks:

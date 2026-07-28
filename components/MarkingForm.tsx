@@ -148,13 +148,13 @@ export default function MarkingForm() {
       </button>
 
       {hasAnonymised && (
-        <div className="flex flex-col gap-2 rounded-md p-4 bg-brand-secondary text-brand-primary">
+        <div className="flex flex-col gap-2 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
           <label htmlFor="anonymised" className="font-medium">
             Anonymised preview ({redactionCount} redaction{redactionCount === 1 ? "" : "s"})
           </label>
           <textarea
             id="anonymised"
-            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-brand-secondary text-brand-primary placeholder:text-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white text-brand-primary placeholder:text-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
             value={anonymisedText}
             onChange={(e) => {
               setAnonymisedText(e.target.value);
@@ -190,7 +190,13 @@ export default function MarkingForm() {
       )}
 
       {result && (
-        <div className="flex flex-col gap-3 rounded-md p-4 bg-brand-secondary text-brand-primary">
+        <p className="text-sm italic text-brand-primary/80 border-l-4 border-brand-primary/30 pl-3">
+          The grade below is a draft — review, edit and personalise it before sharing with the learner.
+        </p>
+      )}
+
+      {result && (
+        <div className="flex flex-col gap-3 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
           {result.topicMismatch ? (
             <div className="flex flex-col gap-1">
               <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 px-3 py-1 text-sm font-medium">
