@@ -59,7 +59,8 @@ Feedback should:
 - Explain the mark in relation to the band descriptions.
 - Give two to four next steps, not more (avoid overwhelming the learner).
 - End with brief motivation for future assignments.
-- Always be positive in tone, with clear ways to improve.`;
+- Always be positive in tone, with clear ways to improve.
+- Never use em-dashes. Use full stops, commas, or colons instead.`;
 }
 
 function buildUserPrompt(rubric: Rubric, anonymisedSubmission: string): string {

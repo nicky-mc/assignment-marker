@@ -117,7 +117,7 @@ export default function MarkingForm() {
           >
             {rubricsForCourse.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.week} — {r.title}
+                {r.week}: {r.title}
               </option>
             ))}
           </select>
@@ -190,8 +190,8 @@ export default function MarkingForm() {
       )}
 
       {result && (
-        <p className="text-sm italic text-brand-primary/80 border-l-4 border-brand-primary/30 pl-3">
-          The grade below is a draft — review, edit and personalise it before sharing with the learner.
+        <p className="text-sm italic text-foreground/80 border-l-4 border-foreground/30 pl-3">
+          The grade below is a draft. Review, edit and personalise it before sharing with the learner.
         </p>
       )}
 

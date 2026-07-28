@@ -1,6 +1,11 @@
 # Changelog
 
-## 2026-07-28 — Preview textarea + draft-grade reminder
+## 2026-07-28: Dark mode fix and no em-dashes
+
+- The draft-grade reminder used a fixed dark purple text colour that was illegible on the dark-mode background (dark purple text on a near-black background). Switched it to the theme-aware `text-foreground` token so it flips to cream in dark mode, same as the rest of the plain page text.
+- Removed all em-dashes from app source text (the assignment dropdown separator and the draft-grade reminder) and added an explicit instruction to the marking system prompt so AI-generated feedback does not use them either.
+
+## 2026-07-28: Preview textarea + draft-grade reminder
 
 - Anonymised preview: the textarea itself is now white (was blending into the green panel), and the surrounding panel got a thick `#3F1046` border to match the treatment now also added to the Mark output panel, so the two "output" panels read as a matched pair.
 - Added a reminder between the Mark button and the grading panel: "The grade below is a draft — review, edit and personalise it before sharing with the learner." Only shows once a result exists.
