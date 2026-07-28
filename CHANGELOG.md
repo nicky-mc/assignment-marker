@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-07-28: Monogram in the header card, tighten logo gap
+
+- Added `public/te-monogram.png` (`TE_Monogram_Negative_Green_Small.png`) inline before the "Marking Assistant" heading in the purple header card. The card's background is fixed purple regardless of theme, so this always uses the light-on-dark ("negative") monogram variant rather than swapping with `prefers-color-scheme`.
+- The gap between the top-left wordmark logo and the header card was 80px (header `py-4` plus main `py-16`). Changed header to `pt-4 pb-0` and main's top padding to `pt-6`, bringing it down to 24px.
+
 ## 2026-07-28: Add Tech Educators logo and favicon
 
 Added the real Tech Educators branding assets, supplied by the user:
