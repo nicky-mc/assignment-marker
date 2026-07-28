@@ -41,23 +41,26 @@ export interface MarkOutcome {
   feedback: MarkingResult["feedback"];
 }
 
-const SYSTEM_PROMPT = `You are marking AI Literacy assignments for Tech Educators, following their Assessment Recording and Marking Policy.
+function buildSystemPrompt(rubric: Rubric): string {
+  const bands = rubric.bandDescriptions ?? BAND_DESCRIPTIONS;
+  return `You are marking assignments for Tech Educators, following their Assessment Recording and Marking Policy.
 
-Mark on a 0-4 scale:
-${BAND_DESCRIPTIONS.map((b) => `- ${b}`).join("\n")}
+Mark on a 0-4 scale, using the band descriptions for this specific assignment:
+${bands.map((b) => `- ${b}`).join("\n")}
 
 Marking approach:
 - Look for reasons to give marks, rather than reasons not to.
-- Mark against the assignment's stated requirements; award a 4 only if the stretch goal is also achieved.
+- Mark strictly against the band descriptions above, which are specific to this assignment.
 - If the submission clearly is not attempting this assignment (wrong topic entirely), set topicMismatch to true and explain what it looks like instead - do not force a confident score onto unrelated content.
 - Before settling on a whole-number score, explicitly consider whether a reasonable second marker could argue for the band above or below. If you can construct a genuine case for either of two adjacent bands, that is a boundary case: you MUST output a decimal score close to the midpoint (e.g. 2.4-2.6) rather than forcing a whole number, to flag it for human moderation, per the policy's second-marking practice. Reserve whole numbers for submissions where one band is clearly the best fit and you would not expect a second marker to disagree.
 
 Feedback should:
 - Recognise effort and achievement first.
-- Explain the mark in relation to the rubric.
+- Explain the mark in relation to the band descriptions.
 - Give two to four next steps, not more (avoid overwhelming the learner).
 - End with brief motivation for future assignments.
 - Always be positive in tone, with clear ways to improve.`;
+}
 
 function buildUserPrompt(rubric: Rubric, anonymisedSubmission: string): string {
   return `Assignment: ${rubric.week} - ${rubric.title}
@@ -84,7 +87,7 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
       effort: "high",
       format: zodOutputFormat(MarkingResultSchema),
     },
-    system: SYSTEM_PROMPT,
+    system: buildSystemPrompt(rubric),
     messages: [{ role: "user", content: buildUserPrompt(rubric, anonymisedSubmission) }],
   });
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-07-28 — Add Digital Marketing with AI course
+
+Added a **Course** dropdown (AI Literacy / Digital Marketing with AI) above the Assignment dropdown; changing course repopulates the assignment list with that course's rubrics and resets the selection to the first one.
+
+Added the six Digital Marketing with AI rubrics from the assignment criteria doc: Week 1 CEO Audit, Week 4 Digital Deep Dive, Week 5 Customer Personas, Week 6 Email Campaigns, Week 7 Content Plan, Week 9 More Reach.
+
+- `Rubric` gained a `courseId` field and an optional `bandDescriptions` array. The AI Literacy rubrics still use the generic 0-4 policy bands, but the DMAI criteria define materially different pass/fail conditions per band per assignment (e.g. Week 1's band 2 is "missing Vision/Mission/Values or 2+ other headings", Week 6's band 3 is "either a 3-stage funnel campaign or a SMYKM email, each with its own specific checklist") - reusing the generic bands would have lost that fidelity, so the system prompt now uses `rubric.bandDescriptions` when present, falling back to the generic policy bands otherwise.
+- IDs for the new rubrics are prefixed `dmai-` to avoid collision with the AI Literacy rubrics (both courses happen to have a "Week 1" and a "Week 5").
+
+Spot-checked `dmai-wk1-ceo-audit` against a sample submission — correctly marked 3/4 and specifically flagged the missing paid/owned/earned classification needed for the stretch goal, confirming the assignment-specific band descriptions are actually driving the mark rather than the generic ones.
+
 ## 2026-07-28 — Initial build
 
 Built from scratch: a small marking tool for Tech Educators' AI Literacy assignments, using Claude to mark against the four rubrics in the marking policy PDF (Week 1 evaluate-LLM-output, Week 2 SWOT, Week 3 risk appetite, Week 5 point-of-view statement).

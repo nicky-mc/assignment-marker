@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RUBRICS } from "@/lib/rubrics";
+import { COURSES, getRubricsForCourse } from "@/lib/rubrics";
 import { anonymise } from "@/lib/anonymise";
 
 interface MarkOutcome {
@@ -19,7 +19,9 @@ interface MarkOutcome {
 }
 
 export default function MarkingForm() {
-  const [rubricId, setRubricId] = useState(RUBRICS[0].id);
+  const [courseId, setCourseId] = useState(COURSES[0].id);
+  const rubricsForCourse = getRubricsForCourse(courseId);
+  const [rubricId, setRubricId] = useState(rubricsForCourse[0].id);
   const [rawSubmission, setRawSubmission] = useState("");
   const [anonymisedText, setAnonymisedText] = useState("");
   const [hasAnonymised, setHasAnonymised] = useState(false);
@@ -37,6 +39,12 @@ export default function MarkingForm() {
     setConfirmedAnonymised(false);
     setResult(null);
     setError(null);
+  }
+
+  function handleCourseChange(newCourseId: string) {
+    setCourseId(newCourseId);
+    setRubricId(getRubricsForCourse(newCourseId)[0].id);
+    setResult(null);
   }
 
   function handleSubmissionChange(value: string) {
@@ -71,10 +79,28 @@ export default function MarkingForm() {
     }
   }
 
-  const selectedRubric = RUBRICS.find((r) => r.id === rubricId)!;
+  const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl">
+      <div className="flex flex-col gap-2">
+        <label htmlFor="course" className="font-medium">
+          Course
+        </label>
+        <select
+          id="course"
+          className="border rounded-md px-3 py-2 bg-white dark:bg-zinc-900"
+          value={courseId}
+          onChange={(e) => handleCourseChange(e.target.value)}
+        >
+          {COURSES.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="flex flex-col gap-2">
         <label htmlFor="assignment" className="font-medium">
           Assignment
@@ -88,7 +114,7 @@ export default function MarkingForm() {
             setResult(null);
           }}
         >
-          {RUBRICS.map((r) => (
+          {rubricsForCourse.map((r) => (
             <option key={r.id} value={r.id}>
               {r.week} — {r.title}
             </option>
