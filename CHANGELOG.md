@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-28: Fix header/card width mismatch
+
+The header card in `page.tsx` sits directly in `<main className="max-w-3xl">`, but `MarkingForm`'s root div independently capped itself at `max-w-2xl`, a narrower width. That made the purple header visibly wider than the Course/Assignment card and everything else below it. Removed the redundant `max-w-2xl` from `MarkingForm` so `<main>`'s width is the only constraint. Verified both cards now measure the same 720px width at the same left edge.
+
 ## 2026-07-28: Dark mode fix and no em-dashes
 
 - The draft-grade reminder used a fixed dark purple text colour that was illegible on the dark-mode background (dark purple text on a near-black background). Switched it to the theme-aware `text-foreground` token so it flips to cream in dark mode, same as the rest of the plain page text.

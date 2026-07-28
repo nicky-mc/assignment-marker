@@ -82,7 +82,7 @@ export default function MarkingForm() {
   const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-2xl">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex flex-col gap-6 rounded-lg p-6 bg-brand-primary text-brand-secondary">
         <div className="flex flex-col gap-2">
           <label htmlFor="course" className="font-medium">
