@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-28: File upload for .txt/.md/.pdf/.docx
+
+Added an "Upload a file" button next to the Learner submission box. Extraction happens entirely in the browser (no new API route, nothing sent to the server until the marker has anonymised and confirmed as before):
+
+- `.txt`/`.md` via the File API's `.text()`.
+- `.pdf` via `pdfjs-dist`, reading the embedded text layer page by page. A scanned/image-only PDF with no text layer throws a clear error asking the marker to paste instead.
+- `.docx` via `mammoth`.
+- `.doc` (old binary Word format) is explicitly rejected with a message pointing at `.docx`, PDF export, or copy-paste - no good lightweight JS parser exists for it.
+
+Both libraries are dynamically imported inside `lib/extractText.ts` rather than imported at the top of the file, so their browser-only code never runs during Next.js's server-side render pass of this client component.
+
+`pdfjs-dist` needs its worker script served as a static file; `scripts/copy-pdf-worker.mjs` copies it from `node_modules` into `public/pdf.worker.min.mjs` on every `npm install` (added as a `postinstall` script) so it can't drift out of sync with the installed version. Also had to add `public/**` to `eslint.config.mjs`'s ignore list - ESLint was trying to lint the 1.2MB minified worker file as source and produced over 1500 warnings.
+
+Verified `mammoth` and `pdfjs-dist` extraction directly against real generated `.docx`/`.pdf` files in Node (matching the exact library calls used in the browser code) - both recovered the original text correctly. Normalised repeated spaces in the PDF path after noticing one PDF generator's text layer used doubled inter-word spacing. Could not drive an actual OS file-picker dialog through either available browser automation tool in this environment to test the click-through in a live tab, so that last step (button click -> file dialog -> textarea fills in) needs a manual check.
+
 ## 2026-07-28: Editable feedback box, fuller draft warning
 
 Added a second panel below the grading result: "Feedback to send (editable)". It is seeded with the same recognition, explanation, next steps and motivation as the read-only card above, combined into one plain-text block a marker can edit directly (a `- ` line per next step), then copy out to wherever they actually send feedback. Seeded in `handleMark`'s success path rather than a `useEffect` watching `result`, since deriving state from a prop/state change belongs in the event handler that caused the change, not a synchronised effect (this also avoided an eslint `react-hooks/set-state-in-effect` error).

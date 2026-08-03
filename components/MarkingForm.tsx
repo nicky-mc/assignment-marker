@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { COURSES, getRubricsForCourse } from "@/lib/rubrics";
 import { anonymise } from "@/lib/anonymise";
+import { extractTextFromFile } from "@/lib/extractText";
 
 interface MarkOutcome {
   rawScore: number;
@@ -46,6 +47,29 @@ export default function MarkingForm() {
   const [result, setResult] = useState<MarkOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editableFeedback, setEditableFeedback] = useState("");
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
+  const [extractWarning, setExtractWarning] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setExtracting(true);
+    setExtractError(null);
+    setExtractWarning(null);
+    try {
+      const { text, warning } = await extractTextFromFile(file);
+      handleSubmissionChange(text);
+      if (warning) setExtractWarning(warning);
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : "Could not read that file.");
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   function handleAnonymise() {
     const { text, redactionCount } = anonymise(rawSubmission);
@@ -72,6 +96,8 @@ export default function MarkingForm() {
     setAnonymisedText("");
     setResult(null);
     setEditableFeedback("");
+    setExtractError(null);
+    setExtractWarning(null);
   }
 
   const markLocked = !hasAnonymised || !confirmedAnonymised || !anonymisedText.trim();
@@ -148,9 +174,28 @@ export default function MarkingForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="submission" className="font-medium">
-          Learner submission
-        </label>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <label htmlFor="submission" className="font-medium">
+            Learner submission
+          </label>
+          <div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={extracting}
+              className="text-sm rounded-md border border-brand-primary/40 px-3 py-1 font-medium disabled:opacity-40"
+            >
+              {extracting ? "Reading file…" : "Upload a file"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md,.markdown,.pdf,.docx"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
+          </div>
+        </div>
         <textarea
           id="submission"
           className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
@@ -158,6 +203,15 @@ export default function MarkingForm() {
           value={rawSubmission}
           onChange={(e) => handleSubmissionChange(e.target.value)}
         />
+        <p className="text-xs text-foreground/60">
+          Accepts .txt, .md, .docx or .pdf, or just paste text directly, e.g. from Google Docs.
+        </p>
+        {extractError && (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {extractError}
+          </p>
+        )}
+        {extractWarning && <p className="text-sm text-amber-700 dark:text-amber-400">{extractWarning}</p>}
       </div>
 
       <button
