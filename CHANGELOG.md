@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-28: Editable feedback box, fuller draft warning
+
+Added a second panel below the grading result: "Feedback to send (editable)". It is seeded with the same recognition, explanation, next steps and motivation as the read-only card above, combined into one plain-text block a marker can edit directly (a `- ` line per next step), then copy out to wherever they actually send feedback. Seeded in `handleMark`'s success path rather than a `useEffect` watching `result`, since deriving state from a prop/state change belongs in the event handler that caused the change, not a synchronised effect (this also avoided an eslint `react-hooks/set-state-in-effect` error).
+
+Expanded the existing "this is a draft" reminder above the grading card, and added a second, more specific one directly above the new editable box: check claims are accurate, check the tone fits how the marker would normally talk to that learner, add anything specific to their submission, and cut anything generic before it goes out.
+
 ## 2026-07-28: Align top logo with header card monogram
 
 The top-left wordmark logo lived in a full-width `<header>` with fixed `px-6` padding, while the header card sits inside `<main className="max-w-3xl">`, which centres itself at wide viewports. At 1400px wide that put the logo and the card's monogram 332px apart. Gave the header the same `max-w-3xl mx-auto` constraint as `main`, plus a `pl-12` to also match the card's own `p-6` inset (main's 24px `px-6` plus the card's 24px `p-6` = 48px). Verified both sit at the exact same x position at 800px and 1400px viewport widths.

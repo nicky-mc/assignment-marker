@@ -18,6 +18,21 @@ interface MarkOutcome {
   };
 }
 
+function buildFeedbackText(result: MarkOutcome): string {
+  const lines: string[] = [];
+  if (result.topicMismatch) {
+    lines.push(result.mismatchReason, "");
+  }
+  lines.push(result.feedback.recognition, "");
+  lines.push(result.feedback.explanation, "");
+  lines.push("Next steps:");
+  for (const step of result.feedback.nextSteps) {
+    lines.push(`- ${step}`);
+  }
+  lines.push("", result.feedback.motivation);
+  return lines.join("\n");
+}
+
 export default function MarkingForm() {
   const [courseId, setCourseId] = useState(COURSES[0].id);
   const rubricsForCourse = getRubricsForCourse(courseId);
@@ -30,6 +45,7 @@ export default function MarkingForm() {
   const [marking, setMarking] = useState(false);
   const [result, setResult] = useState<MarkOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editableFeedback, setEditableFeedback] = useState("");
 
   function handleAnonymise() {
     const { text, redactionCount } = anonymise(rawSubmission);
@@ -38,6 +54,7 @@ export default function MarkingForm() {
     setHasAnonymised(true);
     setConfirmedAnonymised(false);
     setResult(null);
+    setEditableFeedback("");
     setError(null);
   }
 
@@ -45,6 +62,7 @@ export default function MarkingForm() {
     setCourseId(newCourseId);
     setRubricId(getRubricsForCourse(newCourseId)[0].id);
     setResult(null);
+    setEditableFeedback("");
   }
 
   function handleSubmissionChange(value: string) {
@@ -53,6 +71,7 @@ export default function MarkingForm() {
     setConfirmedAnonymised(false);
     setAnonymisedText("");
     setResult(null);
+    setEditableFeedback("");
   }
 
   const markLocked = !hasAnonymised || !confirmedAnonymised || !anonymisedText.trim();
@@ -61,6 +80,7 @@ export default function MarkingForm() {
     setMarking(true);
     setError(null);
     setResult(null);
+    setEditableFeedback("");
     try {
       const res = await fetch("/api/mark", {
         method: "POST",
@@ -71,7 +91,9 @@ export default function MarkingForm() {
       if (!res.ok) {
         throw new Error(data.error ?? "Marking failed");
       }
-      setResult(data as MarkOutcome);
+      const outcome = data as MarkOutcome;
+      setResult(outcome);
+      setEditableFeedback(buildFeedbackText(outcome));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Marking failed");
     } finally {
@@ -191,7 +213,9 @@ export default function MarkingForm() {
 
       {result && (
         <p className="text-sm italic text-foreground/80 border-l-4 border-foreground/30 pl-3">
-          The grade below is a draft. Review, edit and personalise it before sharing with the learner.
+          The mark and feedback below are an AI-generated draft, not a finished result. Check the mark is
+          fair, check every claim in the feedback is accurate, and edit and personalise it before it goes
+          anywhere near the learner.
         </p>
       )}
 
@@ -226,6 +250,26 @@ export default function MarkingForm() {
             </ul>
             <p>{result.feedback.motivation}</p>
           </div>
+        </div>
+      )}
+
+      {result && (
+        <div className="flex flex-col gap-2 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
+          <label htmlFor="editable-feedback" className="font-medium">
+            Feedback to send (editable)
+          </label>
+          <p className="text-sm">
+            This is a starting point, not the finished feedback. Before it goes to the learner: check every
+            claim above is actually true of their work, adjust the tone to how you would normally talk to them,
+            add anything specific to their submission that the AI could not have known, and cut anything
+            generic or repeated. Edit directly below, then copy the result to wherever you send feedback.
+          </p>
+          <textarea
+            id="editable-feedback"
+            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-48 text-sm bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            value={editableFeedback}
+            onChange={(e) => setEditableFeedback(e.target.value)}
+          />
         </div>
       )}
     </div>
