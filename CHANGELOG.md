@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-28: Light/dark mode toggle
+
+The app previously only followed the OS-level `prefers-color-scheme` setting, with no way to override it. Added a manual toggle (sun/moon button, top-right of the header, next to the logo):
+
+- `app/globals.css` now defines dark-mode colours three ways: the existing `@media (prefers-color-scheme: dark)` block as the no-JS/first-paint fallback, and `:root[data-theme="dark"]` / `:root[data-theme="light"]` rules (higher specificity, so an explicit choice always wins over the OS setting in both directions). Also added `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))` so every existing `dark:` Tailwind utility across the app (Logo's light/dark swap, error text colours, etc.) responds to the same attribute instead of the media query.
+- `components/ThemeToggle.tsx` reads/writes `data-theme` on `<html>` and mirrors the choice to `localStorage`.
+- `app/layout.tsx` runs a small inline script via `next/script` with `strategy="beforeInteractive"` (placed as a sibling of `<body>`, per the Next.js docs - not inside a hand-written `<head>`, which isn't the documented pattern for the App Router) that reads `localStorage` before first paint and sets `data-theme` immediately, so a returning visitor never sees a flash of the wrong theme. `<html>` needs `suppressHydrationWarning` since this attribute is set outside React's own render.
+
+`ThemeToggle`'s initial state has to be synced in a `useEffect` (not read during render) because the server has no `document` and always renders as if light - reading the real value during render instead of after mount would itself cause a hydration mismatch. Added a targeted `eslint-disable-next-line react-hooks/set-state-in-effect` with a comment explaining why, rather than restructuring around a lint rule that doesn't have an exception for this genuinely-necessary case.
+
+Verified end-to-end in the browser: toggling flips every themed element (header, cards, logo, badges) correctly, the choice survives a full page reload with no flash, and toggling back to light restores the OS-default-matching state.
+
 ## 2026-07-28: File upload for .txt/.md/.pdf/.docx
 
 Added an "Upload a file" button next to the Learner submission box. Extraction happens entirely in the browser (no new API route, nothing sent to the server until the marker has anonymised and confirmed as before):

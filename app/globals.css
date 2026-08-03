@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Manual theme toggle: `dark:` utilities respond to [data-theme="dark"] on <html>
+   (set by ThemeToggle / the inline init script), not just the OS preference. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   /* Brand: main #3F1046 (deep purple), secondary #2AD385 (green). */
   --brand-primary: #3f1046;
@@ -22,6 +26,7 @@
   --font-heading: var(--font-space-grotesk);
 }
 
+/* Falls back to the OS preference until the toggle (or a stored choice) sets data-theme explicitly. */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1c0a22;
@@ -29,6 +34,21 @@
     --brand-primary-tint: #2b0e33;
     --brand-secondary-tint: #10301f;
   }
+}
+
+/* Explicit choice always wins over the OS preference, in both directions. */
+:root[data-theme="dark"] {
+  --background: #1c0a22;
+  --foreground: #f5efe6;
+  --brand-primary-tint: #2b0e33;
+  --brand-secondary-tint: #10301f;
+}
+
+:root[data-theme="light"] {
+  --background: #fafafa;
+  --foreground: #3f1046;
+  --brand-primary-tint: #f2e9f5;
+  --brand-secondary-tint: #e3faf0;
 }
 
 body {
