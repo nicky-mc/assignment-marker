@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-07-28: Cleaner upload typography, copy button, stronger anonymiser
+
+**Upload typography.** Two separate causes were making uploaded documents look messy:
+
+- The Learner submission and Anonymised preview textareas used `font-mono`, so ordinary prose (plus any leftover irregular spacing from extraction) rendered like code. Dropped `font-mono` from both - they now use the app's normal body font.
+- `lib/extractText.ts` now runs a `normalizeExtractedText()` pass on every extracted file (not on pasted text - that stays exactly as the marker typed or pasted it): CRLF to LF, form-feed page breaks to paragraph breaks, collapsed repeated spaces/tabs per line, trimmed trailing whitespace, and runs of 3+ blank lines collapsed to one. Verified directly in Node against messy sample input - quadruple line breaks, doubled inter-word spacing, tabs, and a form feed all normalized correctly.
+
+**Copy button.** The "Feedback to send (editable)" box now has a Copy button next to its label, using `navigator.clipboard.writeText()`, with the label flipping to "Copied!" for two seconds. Wrapped in a try/catch so a denied clipboard permission fails silently rather than crashing - the text is still a normal textarea the marker can select and copy by hand either way. Could not verify the actual copy-to-clipboard in this environment's sandboxed browser (`NotAllowedError: Write permission denied` - a restriction of the test browser itself, not something a real user's browser does over `https`/`localhost`), so this needs a manual check.
+
+**Anonymiser.** It only caught emails, "Name:"-style lines, and "Hi, I'm X" greetings - genuinely thin, as flagged. Expanded `lib/anonymise.ts` to also catch:
+
+- UK-shaped phone numbers (mobile and landline).
+- A much longer list of label keywords (student ID, candidate number, learner, submitted by, prepared by, written by, created by, from, ...), not just "name"/"student"/"author".
+- Sign-offs, both same-line ("Regards, Jane Doe") and the more common next-line shape ("Regards,\nJane Doe").
+- Standalone name-only lines (e.g. "Jane Doe" alone on its own line) - but only checked in the first 3 and last 5 non-blank lines of the document, not the whole body, since a bare two-capitalised-word line is too likely to be something else (a place, a product name) once you're inside the actual submission text rather than its header/footer.
+
+Verified all of the above directly in Node against realistic sample submissions (name/ID header, email, phone, body text, sign-off) - all expected redactions fired and nothing in ordinary prose was incorrectly flagged.
+
 ## 2026-07-28: Light/dark mode toggle
 
 The app previously only followed the OS-level `prefers-color-scheme` setting, with no way to override it. Added a manual toggle (sun/moon button, top-right of the header, next to the logo):

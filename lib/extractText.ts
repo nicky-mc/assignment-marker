@@ -9,6 +9,22 @@ function hasExtension(name: string, ext: string): boolean {
   return name.toLowerCase().endsWith(ext);
 }
 
+/**
+ * Documents (especially PDFs) commonly extract with doubled inter-word spacing,
+ * stray form-feed page breaks, and runs of blank lines. Clean that up so the
+ * result reads like normal prose rather than a mess of odd whitespace.
+ */
+function normalizeExtractedText(text: string): string {
+  return text
+    .replace(/\r\n?/g, "\n")
+    .replace(/\f/g, "\n\n")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trimEnd())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 async function extractFromPdf(file: File): Promise<ExtractResult> {
   const pdfjsLib = await import("pdfjs-dist");
   pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -20,10 +36,7 @@ async function extractFromPdf(file: File): Promise<ExtractResult> {
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .join(" ")
-      .replace(/[ \t]+/g, " ");
+    const pageText = content.items.map((item) => ("str" in item ? item.str : "")).join(" ");
     pageTexts.push(pageText);
   }
 
@@ -67,17 +80,16 @@ export async function extractTextFromFile(file: File): Promise<ExtractResult> {
     );
   }
 
+  let result: ExtractResult;
   if (hasExtension(name, ".pdf") || file.type === "application/pdf") {
-    return extractFromPdf(file);
+    result = await extractFromPdf(file);
+  } else if (hasExtension(name, ".docx")) {
+    result = await extractFromDocx(file);
+  } else if (PLAIN_TEXT_EXTENSIONS.some((ext) => hasExtension(name, ext)) || file.type.startsWith("text/")) {
+    result = await extractFromPlainText(file);
+  } else {
+    throw new Error("Unsupported file type. Upload a .txt, .md, .docx or .pdf file, or paste the text directly.");
   }
 
-  if (hasExtension(name, ".docx")) {
-    return extractFromDocx(file);
-  }
-
-  if (PLAIN_TEXT_EXTENSIONS.some((ext) => hasExtension(name, ext)) || file.type.startsWith("text/")) {
-    return extractFromPlainText(file);
-  }
-
-  throw new Error("Unsupported file type. Upload a .txt, .md, .docx or .pdf file, or paste the text directly.");
+  return { ...result, text: normalizeExtractedText(result.text) };
 }

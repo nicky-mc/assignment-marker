@@ -50,7 +50,18 @@ export default function MarkingForm() {
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [extractWarning, setExtractWarning] = useState<string | null>(null);
+  const [feedbackCopied, setFeedbackCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleCopyFeedback() {
+    try {
+      await navigator.clipboard.writeText(editableFeedback);
+      setFeedbackCopied(true);
+      setTimeout(() => setFeedbackCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable - marker can still select and copy manually.
+    }
+  }
 
   async function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -198,7 +209,7 @@ export default function MarkingForm() {
         </div>
         <textarea
           id="submission"
-          className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+          className="border border-brand-primary/20 rounded-md px-3 py-2 min-h-40 text-sm bg-white dark:bg-brand-primary-tint focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           placeholder="Paste the learner's submission here..."
           value={rawSubmission}
           onChange={(e) => handleSubmissionChange(e.target.value)}
@@ -230,7 +241,7 @@ export default function MarkingForm() {
           </label>
           <textarea
             id="anonymised"
-            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-40 font-mono text-sm bg-white text-brand-primary placeholder:text-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-40 text-sm bg-white text-brand-primary placeholder:text-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
             value={anonymisedText}
             onChange={(e) => {
               setAnonymisedText(e.target.value);
@@ -309,9 +320,18 @@ export default function MarkingForm() {
 
       {result && (
         <div className="flex flex-col gap-2 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
-          <label htmlFor="editable-feedback" className="font-medium">
-            Feedback to send (editable)
-          </label>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <label htmlFor="editable-feedback" className="font-medium">
+              Feedback to send (editable)
+            </label>
+            <button
+              type="button"
+              onClick={handleCopyFeedback}
+              className="text-sm rounded-md border border-brand-primary/40 px-3 py-1 font-medium"
+            >
+              {feedbackCopied ? "Copied!" : "Copy"}
+            </button>
+          </div>
           <p className="text-sm">
             This is a starting point, not the finished feedback. Before it goes to the learner: check every
             claim above is actually true of their work, adjust the tone to how you would normally talk to them,
