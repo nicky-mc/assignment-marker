@@ -28,7 +28,7 @@ const lexendDeca = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: "Marking Assistant",
+  title: "AssisTED",
   description: "Assistant to help grade learner submissions against Tech Educators Rubrics",
 };
 

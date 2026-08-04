@@ -8,7 +8,7 @@ export default function Home() {
         <div className="rounded-lg p-6 bg-brand-primary text-brand-secondary">
           <div className="flex items-center gap-3">
             <Image src="/te-monogram.png" alt="" width={30} height={46} className="h-9 w-auto" />
-            <h1 className="text-3xl font-semibold">Marking Assistant</h1>
+            <h1 className="text-3xl font-semibold">AssisTED</h1>
           </div>
           <p className="text-brand-secondary/85">
             Assistant to help grade learner submissions against Tech Educators Rubrics

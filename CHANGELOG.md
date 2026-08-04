@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-07-28: Rename header to AssisTED
+
+Renamed the header heading from "Marking Assistant" to "AssisTED" (capitalised TED), and updated the browser tab title to match. Left the subtitle line under it as-is.
+
 ## 2026-07-28: Cleaner upload typography, copy button, stronger anonymiser
 
 **Upload typography.** Two separate causes were making uploaded documents look messy:
