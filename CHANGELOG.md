@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-07-28: Add Digital Innovators course
+
+Added a third course, **Digital Innovators** (`courseId: "di"`), with four rubrics (`di-` prefix, following the `dmai-` convention): Week 1 Create and Publish a Page Full of Content, Week 3 Present Your AI Research, Week 4 AI Tools Showdown (NotebookLM vs Gemini Gems), Week 5 Create an Effective Marketing Email. Purely additive to `lib/rubrics.ts` - one new `COURSES` entry plus four new `RUBRICS` entries appended after the existing DMAI ones; no existing entry, the `Rubric`/`Course` interfaces, the loader functions, or any other file was touched. Each new rubric has its own `bandDescriptions`, same as DMAI, since these assignments also have materially different pass/fail conditions per band rather than the generic AIL scale.
+
+Judgement calls made condensing the brief into band descriptions (none of this was fully spelled out in the source brief, so noting it here for future reference):
+
+- Every one of these four assignments' "4" criteria was specified as "meets 3, plus stretch goals and/or deeper understanding and/or creativity/innovation" followed by a list of examples. Kept that structure literally in `bandDescriptions[4]` (parroting the same qualifier language) rather than trying to compress the examples into a firmer checklist, since the brief itself treats them as illustrative, not exhaustive.
+- Week 5 (marketing email)'s required subject line format (learner's full name, course, assignment title, plus a custom subject matter) is stated once in the brief's requirements list but not repeated in the band-3 text. Pulled it explicitly into both `bandDescriptions[2]` (as a named example of a "required element" that can be missing) and `bandDescriptions[3]` (as its own checklist item), rather than leaving it only in the `requirements` field - otherwise a marking model has no clear, checkable band-3 criterion to test the subject line against, which is exactly the failure mode the spot-check below targets.
+- Week 3's brief lists a long, comma-heavy set of stretch examples (deeper research, critical thinking, creative formats, ethics, case studies, own-field discussion). Kept all of them in `bandDescriptions[4]` rather than trimming, since band 4 is explicitly meant to reward any one of several different kinds of "exceeds," not a specific combination.
+
+**Verification:**
+
+- `npx tsc --noEmit` and `npm run lint` clean.
+- `git diff lib/rubrics.ts` confirmed the change is purely additive (only `+` lines besides the closing-bracket context line) - no existing rubric content altered.
+- Course dropdown now lists AI Literacy / Digital Marketing with AI / **Digital Innovators**; selecting Digital Innovators correctly filters the Assignment dropdown to its four new entries only, same pattern as AIL/DMAI.
+- Spot-checked `di-wk5-marketing-email` against a submission with a generic subject line ("New Autumn Collection Now Available" - no name, course, assignment title, or custom subject matter) but otherwise solid design/persuasion/polish. Result: **2/4** (raw score exactly 2.0, no Borderline badge), with the feedback explicitly naming the missing subject line format as what kept it out of the meets-expectations band and the next steps telling the learner to rework the subject line to include their full name, course, assignment title and a custom subject matter - confirms the `bandDescriptions` override is driving the mark, not the generic policy bands.
+- Did not re-run the full TESTING.md suite (unrelated rubrics, unaffected by an additive change) or the `dmai-wk1-ceo-audit` recheck, since nothing touched the DMAI entries or the marking prompt logic itself.
+
+Ran into an unrelated stale-Turbopack-manifest error ("Manifest file is empty") when first reloading the dev server for this session, from switching between `npm run build` and `npm run dev` earlier in the day - fixed by clearing `.next` and restarting, nothing to do with this change.
+
 ## 2026-07-28: Rename header to AssisTED
 
 Renamed the header heading from "Marking Assistant" to "AssisTED" (capitalised TED), and updated the browser tab title to match. Left the subtitle line under it as-is.

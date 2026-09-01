@@ -6,6 +6,7 @@ export interface Course {
 export const COURSES: Course[] = [
   { id: "ai-literacy", name: "AI Literacy" },
   { id: "digital-marketing-ai", name: "Digital Marketing with AI" },
+  { id: "di", name: "Digital Innovators" },
 ];
 
 export interface Rubric {
@@ -189,6 +190,82 @@ export const RUBRICS: Rubric[] = [
       "2 - Incomplete but shows understanding: student has submitted work, but has not created a series of social posts focused on a specific piece of content.",
       "3 - Complete and meets expectations: the student has completed a series of at least 5 social posts that each include Channel, Post Type, Date, Caption, Image Assets & Descriptions, and Relevant Hashtags.",
       "4 - Complete and exceeds expectations: everything for 3 marks, and the student demonstrates how the series links to a content cluster, event, or brand-based persona.",
+    ],
+  },
+  {
+    id: "di-wk1-notion-page",
+    courseId: "di",
+    week: "Week 1",
+    title: "Create and Publish a Page Full of Content",
+    overview:
+      "Learner creates and publishes a page (e.g. in Notion or a similar tool) on a chosen theme, such as personal course goals, a job role of interest, or how the tool applies to their current job.",
+    requirements:
+      "The page is structured well and presented clearly, uses a variety of at least 3 content blocks, is published with a link provided, and includes a self-reflection (written or recorded).",
+    stretchGoal:
+      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example using more advanced content blocks (database, columns, embedding) that fit the page.",
+    bandDescriptions: [
+      "0 - Not attempted or non-functional.",
+      "1 - Attempted but does not show understanding.",
+      "2 - Incomplete or not fully functional but shows understanding: page attempted but not shared/published properly, or published but the content is extremely lacklustre (e.g. only two text blocks, or only one image).",
+      "3 - Complete and meets expectations: a page on a chosen topic, structured well and presented clearly; uses a variety of at least 3 content blocks; successfully published and viewable; a self-reflection is submitted.",
+      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example using more advanced content blocks (database, columns, embedding) that fit the page.",
+    ],
+  },
+  {
+    id: "di-wk3-ai-research-presentation",
+    courseId: "di",
+    week: "Week 3",
+    title: "Present Your AI Research",
+    overview:
+      "Learner researches at least two areas relating to AI/ML/LLMs in depth, and presents the findings in a shareable format (e.g. slides, Notion, FigJam).",
+    requirements:
+      "At least two research areas are covered with detail, clarity and structure; shared correctly (a published page or public link); the content is the learner's own evaluation and understanding rather than pasted AI output; resources used are attributed with links; and attention is paid to presentation and layout (logical flow, headings, visuals, no more than 10 slides or 2 pages of A4).",
+    stretchGoal:
+      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example deeper explanations or extra research, critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
+    bandDescriptions: [
+      "0 - No submission, or the link is broken/unviewable.",
+      "1 - Attempted but does not show understanding: content is mostly copied, unclear, or does not address the research areas.",
+      "2 - Incomplete but shows understanding: some good research and explanation present, but missing detail, clarity or structure.",
+      "3 - Complete and meets expectations: covers at least two research areas with detail, clarity and structure; shows correct understanding; well-structured, clearly presented, and functional (shared correctly, own evaluation, resources attributed with links).",
+      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example deeper explanations or extra research (an additional topic, case study, or comparison), critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
+    ],
+  },
+  {
+    id: "di-wk4-notebooklm-vs-gems",
+    courseId: "di",
+    week: "Week 4",
+    title: "AI Tools Showdown: NotebookLM vs Gemini Gems",
+    overview:
+      "Learner creates at least one Gemini Gem and one NotebookLM notebook on the same or a similar topic, uses both toward a real goal, and writes a short (max 500 word) evaluation comparing their performance.",
+    requirements:
+      "Created and used a Gemini Gem and a Notebook, evaluated the performance between the two, provided a link to the evaluation, and provided a self-reflection (written or recorded).",
+    stretchGoal:
+      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example creating more than one Gem and Notebook with further evaluation of how they perform in their intended use cases, explaining future personal/workplace use cases, or considering the potential audience and paying careful attention to presentation design.",
+    bandDescriptions: [
+      "0 - Not attempted or non-functional.",
+      "1 - Attempted but does not show understanding.",
+      "2 - Incomplete or not fully functional but shows understanding: created a Gem and/or Notebook but has not evaluated their differences, or has greatly exceeded the 500-word limit (without including stretch goals).",
+      "3 - Complete and meets expectations: created and used a Gemini Gem and a Notebook; evaluated performance between the two; provided a link to the evaluation; provided a self-reflection.",
+      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example creating more than one Gem and Notebook with further evaluation of how they perform in their intended use cases, explaining future personal/workplace use cases, or considering the potential audience and paying careful attention to presentation design.",
+    ],
+  },
+  {
+    id: "di-wk5-marketing-email",
+    courseId: "di",
+    week: "Week 5",
+    title: "Create an Effective Marketing Email",
+    overview:
+      "Learner designs, builds and sends a marketing email demonstrating design principles and persuasive communication, submitted with screenshots and an explanation.",
+    requirements:
+      "A clear purpose for the email (inform, promote, update, or persuade); a custom subject line containing the learner's full name, course, assignment title, and a custom subject matter; at least two design principles visibly and correctly applied (e.g. hierarchy, contrast); at least two persuasive communication techniques used (e.g. bottom line up front, a call to action); a logical structure and layout (headers, images, spacing, contrast); branding/consistency (colours, fonts and tone matching the intended brand or campaign); professional polish (proofread, high-quality visuals, appropriate links/buttons); and screenshots plus an explanation included alongside the email.",
+    stretchGoal:
+      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example clear excellence in presentation, creativity or technical skill, original or cleverly integrated imagery/graphics/animation/video/GIF content, data-driven or research-based justification for design/messaging decisions, exceptional originality or brand storytelling, or deeper self-reflection with insight and critical evaluation.",
+    bandDescriptions: [
+      "0 - No marketing email submitted, or the submission does not address the requirements; missing, irrelevant, or an unusable format.",
+      "1 - Attempted but does not show understanding: lacks a clear purpose, audience or logical structure; fails to show understanding of design principles or persuasive techniques; much required content is missing or unclear; visuals/formatting show little attention to design or professionalism.",
+      "2 - Incomplete but shows understanding: covers most core requirements but inconsistently or with errors; one or more required elements (purpose, subject line format, persuasive technique, design principle, structure, branding, polish) missing or weakly evidenced; screenshots/explanation present but inadequately justify the design choices.",
+      "3 - Complete and meets expectations: purpose stated and suited to the audience; subject line includes the learner's full name, course, assignment title, and a custom subject matter; at least two design principles correctly applied and explained; at least two persuasive techniques used effectively; logical, visually organised structure; branding/consistency evident; proofread, polished, with appropriate links; screenshots and explanation adequately demonstrate the requirements are met; self-reflection included.",
+      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example clear excellence in presentation, creativity or technical skill, original or cleverly integrated imagery/graphics/animation/video/GIF content, data-driven or research-based justification for design/messaging decisions, exceptional originality or brand storytelling, or deeper self-reflection with insight and critical evaluation.",
     ],
   },
 ];
