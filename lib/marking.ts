@@ -5,11 +5,6 @@ import { BAND_DESCRIPTIONS, Rubric } from "./rubrics";
 import { computeBand } from "./scoring";
 
 export const MarkingResultSchema = z.object({
-  rawScore: z
-    .number()
-    .describe(
-      "Score from 0 to 4 in increments of 0.1. Use a whole number when confidently in one band. Use a decimal near X.5 (e.g. 2.5, 2.6) when the submission sits on the boundary between band X and band X+1.",
-    ),
   topicMismatch: z
     .boolean()
     .describe(
@@ -18,6 +13,33 @@ export const MarkingResultSchema = z.object({
   mismatchReason: z
     .string()
     .describe("If topicMismatch is true, a one-sentence explanation of what the submission actually appears to be. Empty string otherwise."),
+  bandReasoning: z
+    .string()
+    .describe(
+      "Reason through this before scoring: state which band the submission best fits and why, then explicitly consider whether a reasonable second marker could genuinely argue for the adjacent band above or below instead. Decide this before boundaryCase and rawScore below, since they must follow from this reasoning rather than the other way round.",
+    ),
+  boundaryCase: z
+    .boolean()
+    .describe(
+      "True only if bandReasoning above found a genuine case for two adjacent bands (a reasonable second marker could argue either way), not merely a minor quality difference within one band. False if one band is clearly the best fit and you would not expect a second marker to disagree.",
+    ),
+  boundaryBandLower: z
+    .number()
+    .nullable()
+    .describe(
+      "If boundaryCase is true, the lower of the two adjacent band numbers in tension (e.g. 2 if torn between band 2 and band 3). Null if boundaryCase is false.",
+    ),
+  boundaryBandUpper: z
+    .number()
+    .nullable()
+    .describe(
+      "If boundaryCase is true, the higher of the two adjacent band numbers in tension (e.g. 3 if torn between band 2 and band 3). Null if boundaryCase is false.",
+    ),
+  rawScore: z
+    .number()
+    .describe(
+      "Score from 0 to 4 in increments of 0.1, consistent with bandReasoning and boundaryCase above. If boundaryCase is false, use a whole number. If boundaryCase is true, use a decimal near the midpoint between boundaryBandLower and boundaryBandUpper (e.g. 2.4-2.6 for bands 2 and 3, 0.4-0.6 for bands 0 and 1).",
+    ),
   feedback: z.object({
     recognition: z.string().describe("One or two sentences recognising the learner's effort and achievement."),
     explanation: z.string().describe("One or two sentences explaining why this mark was awarded, tied to the rubric."),
@@ -36,6 +58,12 @@ export interface MarkOutcome {
   rawScore: number;
   mark: number;
   borderline: boolean;
+  /** The model's own reasoning about which band(s) fit, written before boundaryCase/rawScore. Surfaced for review/debugging; not currently shown in the UI. */
+  bandReasoning: string;
+  /** The model's own explicit boundary-case judgement, from bandReasoning above. Primary signal behind `borderline`. */
+  boundaryCase: boolean;
+  /** The two adjacent band numbers in tension, e.g. [2, 3]. Null when boundaryCase is false. */
+  boundaryBands: [number, number] | null;
   topicMismatch: boolean;
   mismatchReason: string;
   feedback: MarkingResult["feedback"];
@@ -52,7 +80,9 @@ Marking approach:
 - Look for reasons to give marks, rather than reasons not to.
 - Mark strictly against the band descriptions above, which are specific to this assignment.
 - If the submission clearly is not attempting this assignment (wrong topic entirely), set topicMismatch to true and explain what it looks like instead - do not force a confident score onto unrelated content.
-- Before settling on a whole-number score, explicitly consider whether a reasonable second marker could argue for the band above or below. If you can construct a genuine case for either of two adjacent bands, that is a boundary case: you MUST output a decimal score close to the midpoint (e.g. 2.4-2.6) rather than forcing a whole number, to flag it for human moderation, per the policy's second-marking practice. Reserve whole numbers for submissions where one band is clearly the best fit and you would not expect a second marker to disagree.
+- Work through bandReasoning first: state which band the submission best fits and why, then explicitly consider whether a reasonable second marker could genuinely argue for the adjacent band above or below instead. This applies at every boundary (0/1, 1/2, 2/3, 3/4), not just one midpoint - work through whichever adjacent pair is actually in play for this submission.
+- Only after that reasoning is written down, decide boundaryCase: true if you found a genuine case for two adjacent bands, false if one band is clearly the best fit and you would not expect a second marker to disagree. If true, set boundaryBandLower/boundaryBandUpper to the two band numbers in tension.
+- Finally, set rawScore consistent with that decision: a whole number when boundaryCase is false, or a decimal near the midpoint between boundaryBandLower and boundaryBandUpper when boundaryCase is true, to flag it for human moderation per the policy's second-marking practice.
 
 Feedback should:
 - Recognise effort and achievement first.
@@ -97,12 +127,19 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
   }
 
   const result = response.parsed_output;
-  const { mark, borderline } = computeBand(result.rawScore);
+  const { mark, borderline } = computeBand(result.rawScore, result.boundaryCase);
+  const boundaryBands: [number, number] | null =
+    result.boundaryCase && result.boundaryBandLower !== null && result.boundaryBandUpper !== null
+      ? [result.boundaryBandLower, result.boundaryBandUpper]
+      : null;
 
   return {
     rawScore: result.rawScore,
     mark,
     borderline,
+    bandReasoning: result.bandReasoning,
+    boundaryCase: result.boundaryCase,
+    boundaryBands,
     topicMismatch: result.topicMismatch,
     mismatchReason: result.mismatchReason,
     feedback: result.feedback,
