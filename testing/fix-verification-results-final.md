@@ -1,6 +1,8 @@
 # Boundary-flag fix — final verification report
 
-Covers all 41 cases from `testing/fix-verification-results.md` (the partial run) plus the 10 originally-missing cases and 5 re-runs completed after that. Read-only measurement; `lib/rubrics.ts` was not touched. `lib/marking.ts`/`lib/scoring.ts` carry the fix described in the changelog, plus one correction made mid-verification (see "Implementation note" below) — neither is committed as part of this report.
+Covers all 41 cases from `testing/fix-verification-results.md` (the partial run) plus the 10 originally-missing cases and 5 re-runs completed after that. Read-only measurement; `lib/rubrics.ts` was not touched. `lib/marking.ts`/`lib/scoring.ts` carry the fix described below and in the changelog, plus one correction made mid-verification (see "Implementation note" below).
+
+**Status: the fix has been pushed as commit [`d3aad68`](https://github.com/nicky-mc/assignment-marker/commit/d3aad68) on `main`**, on the strength of this verification (50%→0% gap rate, zero regressions) with the non-determinism and false-positive caveats below accepted as safe-direction failure modes for a flag-for-human-review mechanism. See `CHANGELOG.md`'s 2026-09-02 entry for the full writeup.
 
 **Data provenance, honestly stated:** 26 of the 41 cases only ever had their summary fields captured (`rawScore`/`mark`/`borderline`/`boundaryCase`/`boundaryBands`) — the run that would have produced their full feedback text was interrupted and never re-run, per your explicit instruction not to re-run those 31. The other 15 (10 originally-missing + 5 you approved for re-run) have full text, including `bandReasoning`. Where a claim below needs quoted reasoning, it draws only from those 15.
 
