@@ -296,11 +296,6 @@ export default function MarkingForm() {
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
-              {result.borderline && (
-                <span className="inline-block rounded-full bg-brand-primary text-brand-secondary px-3 py-1 text-sm font-medium">
-                  Borderline
-                </span>
-              )}
               <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
             </div>
           )}

@@ -212,28 +212,9 @@ export const RUBRICS: Rubric[] = [
     ],
   },
   {
-    id: "di-wk3-ai-research-presentation",
-    courseId: "di",
-    week: "Week 3",
-    title: "Present Your AI Research",
-    overview:
-      "Learner researches at least two areas relating to AI/ML/LLMs in depth, and presents the findings in a shareable format (e.g. slides, Notion, FigJam).",
-    requirements:
-      "At least two research areas are covered with detail, clarity and structure; shared correctly (a published page or public link); the content is the learner's own evaluation and understanding rather than pasted AI output; resources used are attributed with links; and attention is paid to presentation and layout (logical flow, headings, visuals, no more than 10 slides or 2 pages of A4).",
-    stretchGoal:
-      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example deeper explanations or extra research, critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
-    bandDescriptions: [
-      "0 - No submission, or the link is broken/unviewable.",
-      "1 - Attempted but does not show understanding: content is mostly copied, unclear, or does not address the research areas.",
-      "2 - Incomplete but shows understanding: some good research and explanation present, but missing detail, clarity or structure.",
-      "3 - Complete and meets expectations: covers at least two research areas with detail, clarity and structure; shows correct understanding; well-structured, clearly presented, and functional (shared correctly, own evaluation, resources attributed with links).",
-      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example deeper explanations or extra research (an additional topic, case study, or comparison), critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
-    ],
-  },
-  {
     id: "di-wk4-notebooklm-vs-gems",
     courseId: "di",
-    week: "Week 4",
+    week: "Week 3",
     title: "AI Tools Showdown: NotebookLM vs Gemini Gems",
     overview:
       "Learner creates at least one Gemini Gem and one NotebookLM notebook on the same or a similar topic, uses both toward a real goal, and writes a short (max 500 word) evaluation comparing their performance.",
@@ -247,6 +228,25 @@ export const RUBRICS: Rubric[] = [
       "2 - Incomplete or not fully functional but shows understanding: created a Gem and/or Notebook but has not evaluated their differences, or has greatly exceeded the 500-word limit (without including stretch goals).",
       "3 - Complete and meets expectations: created and used a Gemini Gem and a Notebook; evaluated performance between the two; provided a link to the evaluation; provided a self-reflection.",
       "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example creating more than one Gem and Notebook with further evaluation of how they perform in their intended use cases, explaining future personal/workplace use cases, or considering the potential audience and paying careful attention to presentation design.",
+    ],
+  },
+  {
+    id: "di-wk3-ai-research-presentation",
+    courseId: "di",
+    week: "Week 4",
+    title: "Present Your AI Research",
+    overview:
+      "Learner researches at least two areas relating to AI/ML/LLMs in depth, and presents the findings in a shareable format (e.g. slides, Notion, FigJam).",
+    requirements:
+      "At least two research areas are covered with detail, clarity and structure; shared correctly (a published page or public link); the content is the learner's own evaluation and understanding rather than pasted AI output; resources used are attributed with links; and attention is paid to presentation and layout (logical flow, headings, visuals, no more than 10 slides or 2 pages of A4).",
+    stretchGoal:
+      "Everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation - for example deeper explanations or extra research, critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
+    bandDescriptions: [
+      "0 - No submission, or the link is broken/unviewable.",
+      "1 - Attempted but does not show understanding: content is mostly copied, unclear, or does not address the research areas.",
+      "2 - Incomplete but shows understanding: some good research and explanation present, but missing detail, clarity or structure.",
+      "3 - Complete and meets expectations: covers at least two research areas with detail, clarity and structure; shows correct understanding; well-structured, clearly presented, and functional (shared correctly, own evaluation, resources attributed with links).",
+      "4 - Complete and exceeds expectations: everything for 3 marks, plus stretch goals and/or deeper understanding and/or creativity/innovation, for example deeper explanations or extra research (an additional topic, case study, or comparison), critical thinking about benefits/risks/implications/future trends, a creative or engaging presentation (e.g. a short explainer video/audio, original diagrams or infographics), case studies comparing specific LLMs, ethical challenges explored (bias, misinformation, environmental impact), or discussion of how AI might affect the learner's own field.",
     ],
   },
   {
