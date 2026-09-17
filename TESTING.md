@@ -1,8 +1,8 @@
 # Testing the Assignment Marker
 
-Five test cases exercise the marking pipeline end-to-end: the assignment rubric selection, the Anthropic-backed marking call, the rounding/borderline logic, and the topic-mismatch flag.
+Six test cases exercise the marking pipeline end-to-end: the assignment rubric selection, the Anthropic-backed marking call, the rounding/borderline logic, the topic-mismatch flag, and (Test 6) the presence-evidence check that requires a quote for criteria that need a specific artefact to exist.
 
-All five use the **Week 1 — Evaluate an LLM's Output** rubric (`wk1-evaluate-llm-output`), except Test 4 which deliberately submits Week 2 content against the Week 1 rubric.
+All six use the **Week 1 — Evaluate an LLM's Output** rubric (`wk1-evaluate-llm-output`), except Test 4 which deliberately submits Week 2 content against the Week 1 rubric.
 
 Run each either through the UI (paste the submission, click Anonymise, tick the confirmation, click Mark) or directly against the API:
 
@@ -56,6 +56,20 @@ Marked against the **Week 1** rubric, but the content is actually a Week 2 SWOT 
 
 **Expect:** this touches on readability and the human-vs-AI question but stays surface-level and self-admits it isn't a full comparison — genuinely arguable between "incomplete but shows understanding" (2) and "meets expectations" (3). Expect a raw score around 2.5–2.6, which rounds up to **mark 3/4** with the **Borderline** badge shown.
 
+## Test 6 — missing the comparison artefact (expect the comparison criterion marked unmet, mark around 2/4)
+
+Added after a real case (a genuine learner submission) got 4/4 from the model, which stated the learner had produced a comparison, when in fact the learner had only written a prompt and evaluated the AI's response to it — no standalone human-authored piece existed anywhere in the submission for a like-for-like comparison. A human marker correctly caught this and scored it 2/4. This test reproduces that shape synthetically: a well-written prompt, a critique of the AI's output, and reflective commentary, but no standalone piece the learner wrote themselves on the same subject.
+
+> I wanted the LLM to help me draft a client update on a project delay for my role. My prompt was: "Write a short, professional but warm email update to a client whose project is now two weeks behind schedule. Explain the reason (a supplier delay on materials), apologise appropriately, and reassure them about the revised delivery date without over-promising."
+>
+> The LLM's response was a well-structured email: it opened with a clear apology, explained the supplier delay in one sentence, gave a firm revised date, and closed with a reassurance about quality not being compromised. It used a slightly more formal tone than I'd normally use with this particular client, and it included a generic "we value your business" line that felt a bit corporate for them.
+>
+> Critique: the structure was strong and the reason for the delay was clear, but the tone didn't quite match how I actually talk to this client, who I've worked with for years and who prefers a more casual, direct style. I'd want to strip out the corporate closing line and shorten a couple of the sentences.
+>
+> Reflection: this showed me that even a fairly specific prompt still needs a tone/audience note to really land right. Next time I'll add a line like "keep the tone casual, like emailing a long-term contact" rather than assuming the model will infer that from context.
+
+**Expect:** the model's `presenceEvidence` marks the "learner's own standalone written piece" criterion as `met: false` (with `quote: null`, since no such piece exists anywhere in the text), and the overall mark reflects that this criterion isn't satisfied regardless of how strong the prompt-writing, critique and reflection are elsewhere — landing around **2/4**, matching the human marker's judgement on the real case this is modelled on. No mismatch (the submission is clearly attempting this assignment's general shape, just missing one required artefact).
+
 ## Recording results
 
 Run 2026-07-28, against `claude-opus-4-8`:
@@ -73,3 +87,5 @@ All five pass: Tests 1–3 got different marks (4, 3, 1), Test 4 was flagged as 
 Since marking runs through a live LLM call, exact raw scores can vary slightly between runs — the pass/fail criteria are the pattern above (Tests 1–3 differ, Test 4 flags, Test 5 borderline-rounds-to-3), not the exact decimal.
 
 **Note on Test 5:** getting the model to reliably output a genuinely boundary-straddling decimal score (rather than confidently committing to a whole number) took several attempts at wording the fixture, and surfaced a real bug in [lib/scoring.ts](lib/scoring.ts): `2.4 - Math.floor(2.4)` isn't exactly `0.4` in JS floating-point arithmetic, so the borderline check was silently failing. Fixed by rounding the fraction to 1 decimal place before comparing.
+
+**Status on Test 6 (presence-evidence fix, added 2026-09-17): not yet verified.** The `presenceEvidence` mechanism in `lib/marking.ts` correctly detected the missing artefact on the first run (`met: false`, `quote: null` for the learner's own written piece) but the score still came back 4/4 - the reasoning treated the gap as a minor boundary nuance rather than a hard ceiling. Strengthened the `bandReasoning` and system-prompt wording to make the ceiling explicit (a submission cannot reach meets-expectations or above if a required presence-based criterion is unmet). That change is untested: the re-run hit an Anthropic API billing error (credit balance too low) before a result came back, and Tests 1-5 haven't been re-checked against this final wording either. Do not treat Test 6, or the `max_tokens` increase from 2000 to 4000 that came with it, as verified until both have actually been run.
