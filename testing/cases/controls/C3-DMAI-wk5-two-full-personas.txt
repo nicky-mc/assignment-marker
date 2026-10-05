@@ -1,0 +1,23 @@
+Customer personas for GreenPlate, a small meal-box business.
+
+Persona 1
+- Persona name: Priya Nair
+- Location: Leeds, UK
+- Profession or industry: Primary school teaching assistant
+- Income or turnover: about 24,000 pounds a year (household income around 48,000 pounds)
+- Point of need/challenge: wants healthy, quick weekday meals for two children without spending evenings cooking
+- Buying behaviour and frequency: orders a weekly meal box online, usually on a Sunday evening, and buys occasional extras at local food festivals
+- Communication style: short, friendly messages; skims email on her phone; likes clear prices
+- Preferred channel(s): Instagram and email
+- Tone of voice: warm, practical, reassuring
+
+Persona 2
+- Persona name: Daniel Okafor
+- Location: Manchester, UK
+- Profession or industry: Software engineer
+- Income or turnover: about 58,000 pounds a year
+- Point of need/challenge: wants high-protein meals that fit his training plan and save time after work
+- Buying behaviour and frequency: subscribes to a fortnightly delivery and reorders after reading reviews
+- Communication style: direct and detail-oriented; reads the nutritional information before buying
+- Preferred channel(s): YouTube, LinkedIn and email newsletters
+- Tone of voice: confident, factual, lightly motivational

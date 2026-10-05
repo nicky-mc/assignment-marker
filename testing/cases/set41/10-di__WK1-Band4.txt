@@ -1,0 +1,5 @@
+Published Notion link works. Page titled "Personal Goals for Digital Innovators."
+
+Content: a heading block, an intro paragraph, a toggle list breaking down three goals ("learn AI agent basics," "get confident with spreadsheets," "improve presenting"), a callout block highlighting the top priority goal, and a divider separating sections. Four distinct block types used. Additionally includes an embedded Google Calendar widget showing a self-made weekly study schedule, and a simple linked database (table) tracking each goal against a "status" property (Not started / In progress / Done).
+
+Reflection: "I found it easy to list goals but harder to make the page look organised - I used toggles once I found a video showing how. I tried a database because I wanted the page to actually be useful to me after the course ends, not just a one-off assignment."

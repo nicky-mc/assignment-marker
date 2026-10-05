@@ -1,0 +1,5 @@
+Goal stated clearly: "using each tool to help summarise my own lecture notes from a previous course, to see which was more useful for future revision." Created and used both a Gem and a Notebook on the same source material. 480-word evaluation compares ease of use, output quality and speed to goal, e.g. "NotebookLM's citations back to my actual notes made me trust its summary more, whereas the Gem's summary felt more polished but I couldn't check where it came from." Link to the evaluation shared and viewable.
+
+Also created a second Gem and Notebook pair on a different topic (a work-related process document) specifically to test whether the tools' relative strengths held up outside the first use case - and reports the same pattern held. Adds a short paragraph on future use cases: using NotebookLM for onboarding documentation at work, and a Gem for quick day-to-day Q&A. Notes thought given to who might read the evaluation and adjusts explanations accordingly (defines "grounding" and "hallucination" briefly for a non-technical reader).
+
+Self-reflection included.

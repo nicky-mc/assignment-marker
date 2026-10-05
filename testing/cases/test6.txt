@@ -1,0 +1,7 @@
+I wanted the LLM to help me draft a client update on a project delay for my role. My prompt was: "Write a short, professional but warm email update to a client whose project is now two weeks behind schedule. Explain the reason (a supplier delay on materials), apologise appropriately, and reassure them about the revised delivery date without over-promising."
+
+The LLM's response was a well-structured email: it opened with a clear apology, explained the supplier delay in one sentence, gave a firm revised date, and closed with a reassurance about quality not being compromised. It used a slightly more formal tone than I'd normally use with this particular client, and it included a generic "we value your business" line that felt a bit corporate for them.
+
+Critique: the structure was strong and the reason for the delay was clear, but the tone didn't quite match how I actually talk to this client, who I've worked with for years and who prefers a more casual, direct style. I'd want to strip out the corporate closing line and shorten a couple of the sentences.
+
+Reflection: this showed me that even a fairly specific prompt still needs a tone/audience note to really land right. Next time I'll add a line like "keep the tone casual, like emailing a long-term contact" rather than assuming the model will infer that from context.

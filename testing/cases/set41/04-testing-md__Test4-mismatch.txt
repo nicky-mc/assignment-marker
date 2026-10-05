@@ -1,0 +1,7 @@
+Strengths: We already have a data protection policy and staff are aware of GDPR basics.
+
+Weaknesses: We haven't considered copyright risk in AI-generated marketing images, and there's no policy on checking AI output for defamatory claims before publishing.
+
+Opportunities: Getting ahead of the EU AI Act now would let us market ourselves as a compliant, trustworthy AI user to enterprise clients.
+
+Threats: If an AI tool trained on scraped data produces content that infringes someone's copyright, we could be liable even though we didn't write it ourselves.

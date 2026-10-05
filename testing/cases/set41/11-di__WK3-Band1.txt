@@ -1,0 +1,1 @@
+A 14-slide deck, mostly bullet points that read like they're copy-pasted from Wikipedia's "Large language model" article, no paraphrasing, no personal voice. Covers "AI" and "LLMs" as headings but the content under each is identical in tone to the source with no citation. No link to publicly viewable version, deck attached as a raw .pptx file instead.

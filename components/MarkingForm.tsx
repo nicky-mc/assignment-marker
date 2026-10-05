@@ -9,6 +9,8 @@ interface MarkOutcome {
   rawScore: number;
   mark: number;
   borderline: boolean;
+  ceilingBand: number;
+  capped: boolean;
   topicMismatch: boolean;
   mismatchReason: string;
   feedback: {
@@ -294,9 +296,16 @@ export default function MarkingForm() {
               <p className="text-sm">{result.mismatchReason}</p>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
-              <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
+                <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
+              </div>
+              {result.capped && (
+                <p className="text-sm font-medium">
+                  Mark capped at {result.mark}: a required element was not found in the submission
+                </p>
+              )}
             </div>
           )}
 

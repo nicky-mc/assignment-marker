@@ -1,0 +1,3 @@
+Published Notion link works. Page titled "My Course Goals."
+
+Content: a heading, one paragraph of text, and one bullet list - two content blocks total, not three. No callout, no toggle, no image, no embed. No reflection submitted.

@@ -1,0 +1,5 @@
+Shared Notion page, published and viewable, written in the learner's own words throughout, with clear headings and a reasonable layout.
+
+Topic 1 - Types of LLMs and major providers: Detailed, well-structured section (three paragraphs) explaining that LLMs like GPT, Claude and Gemini differ in training data, context window size, and intended use cases, with two linked sources (an OpenAI blog post and a comparison article) credited inline, and the learner's own summary of what each provider seems best suited for.
+
+Topic 2 - Limitations of LLMs: Much shorter section, about half the length of Topic 1, briefly mentioning that LLMs can "hallucinate" and "aren't always right," with one linked source (a news article) and no specific example or deeper explanation of why hallucination happens.

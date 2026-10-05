@@ -1,0 +1,3 @@
+Published Notion link works. Page titled "Personal Goals for Digital Innovators."
+
+Content: a heading block, an intro paragraph, a toggle list breaking down three goals ("learn AI agent basics," "get confident with spreadsheets," "improve presenting"), a callout block highlighting the top priority goal, and a divider separating sections. Four distinct block types used. Ends with a short written reflection: "I found it easy to list goals but harder to make the page look organised - I used toggles once I found a video showing how."

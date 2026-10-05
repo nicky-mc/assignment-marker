@@ -21,6 +21,11 @@ export const MarkingResultSchema = z.object({
           .describe(
             "A short label for one presence-based criterion from this assignment's Requirements/Stretch Goal/band descriptions - something specific that must actually exist in the submission (a named artefact, a required comparison, a specific field, a required action taken), as distinct from a quality-based criterion that judges how well something was done. Do not list quality-based criteria here.",
           ),
+        level: z
+          .enum(["required", "stretch"])
+          .describe(
+            'Exactly "required" if the rubric\'s 3-mark requirements say this must exist in the submission, or exactly "stretch" if only the 4-mark stretch goal asks for it. Only artefacts that must physically exist in the submission belong in this list; never list a quality judgement.',
+          ),
         quote: z
           .string()
           .nullable()
@@ -39,6 +44,14 @@ export const MarkingResultSchema = z.object({
     .string()
     .describe(
       "Reason through this before scoring. First apply a hard ceiling: if any presence-based criterion needed for the meets-expectations band is marked met: false in presenceEvidence above, the submission CANNOT be placed in the meets-expectations band or higher, no matter how strong the rest of the submission is - cap it at whichever lower band actually reflects a missing or incomplete required element (per the band descriptions above). Do not let overall quality, effort, or a strong impression elsewhere override a genuinely missing piece of required evidence; only consider the meets-expectations band or above once every such criterion is satisfied. Only after establishing that ceiling, state which band the submission best fits and why, then explicitly consider whether a reasonable second marker could genuinely argue for the adjacent band above or below instead. Decide this before boundaryCase and rawScore below, since they must follow from this reasoning rather than the other way round.",
+    ),
+  ceilingBand: z
+    .number()
+    .int()
+    .min(0)
+    .max(4)
+    .describe(
+      "The highest band (0 to 4) this submission can reach given any required element that is missing, as established in presenceEvidence and bandReasoning above. 4 when nothing required is missing. If a required element is missing, set the band that reflects an incomplete submission, not the band the rest of the work would otherwise earn.",
     ),
   boundaryCase: z
     .boolean()
@@ -80,6 +93,10 @@ export interface MarkOutcome {
   rawScore: number;
   mark: number;
   borderline: boolean;
+  /** The highest band reachable given missing required elements, as stated by the model (4 when nothing required is missing). */
+  ceilingBand: number;
+  /** True only when ceilingBand lowered the mark that rounding would otherwise have given. */
+  capped: boolean;
   /** Presence-based criteria checked before scoring, each with a quote from the submission or null if unmet. Surfaced for review/debugging; not currently shown in the UI. */
   presenceEvidence: MarkingResult["presenceEvidence"];
   /** The model's own reasoning about which band(s) fit, written before boundaryCase/rawScore. Surfaced for review/debugging; not currently shown in the UI. */
@@ -104,7 +121,7 @@ Marking approach:
 - Look for reasons to give marks, rather than reasons not to.
 - Mark strictly against the band descriptions above, which are specific to this assignment.
 - If the submission clearly is not attempting this assignment (wrong topic entirely), set topicMismatch to true and explain what it looks like instead - do not force a confident score onto unrelated content.
-- Before any other reasoning, work through presenceEvidence: identify every presence-based criterion in the rubric above (something specific that must exist in the submission, e.g. a named artefact, a required comparison, a specific field, a required action) as distinct from quality-based criteria (how well something was done). For each presence-based criterion, quote the exact submission text that satisfies it, or mark it unmet if you cannot find that evidence anywhere in the text - do not infer that something exists because the rest of the submission reads as strong or complete.
+- Before any other reasoning, work through presenceEvidence: identify every presence-based criterion in the rubric above (something specific that must exist in the submission, e.g. a named artefact, a required comparison, a specific field, a required action) as distinct from quality-based criteria (how well something was done). For each presence-based criterion, quote the exact submission text that satisfies it, or mark it unmet if you cannot find that evidence anywhere in the text - do not infer that something exists because the rest of the submission reads as strong or complete. Give each item a level: "required" means the rubric's 3-mark requirements say it must exist in the submission; "stretch" means only the 4-mark stretch goal asks for it. List only artefacts that must physically exist in the submission. Never list quality judgements.
 - Work through bandReasoning next. Apply a hard ceiling first: if any presence-based criterion needed for the meets-expectations band is unmet in presenceEvidence, the submission cannot reach meets-expectations or above regardless of how strong the rest of the work is - cap it at the band that reflects a missing/incomplete required element instead, and only consider meets-expectations or higher once every such criterion is satisfied. Then state which band the submission best fits and why, and explicitly consider whether a reasonable second marker could genuinely argue for the adjacent band above or below. This applies at every boundary (0/1, 1/2, 2/3, 3/4), not just one midpoint - work through whichever adjacent pair is actually in play for this submission.
 - Only after that reasoning is written down, decide boundaryCase: true if you found a genuine case for two adjacent bands, false if one band is clearly the best fit and you would not expect a second marker to disagree. If true, set boundaryBandLower/boundaryBandUpper to the two band numbers in tension.
 - Finally, set rawScore consistent with that decision: a whole number when boundaryCase is false, or a decimal near the midpoint between boundaryBandLower and boundaryBandUpper when boundaryCase is true, to flag it for human moderation per the policy's second-marking practice.
@@ -134,6 +151,14 @@ ${anonymisedSubmission}
 Mark this submission against the assignment above.`;
 }
 
+// Usage metadata only: a timestamp, the rubric id, the stop reason and token counts. Never log the
+// submission, the model's reasoning, or any feedback text, and never log an error message.
+function logUsage(rubricId: string, stopReason: string, inputTokens: number | null, outputTokens: number | null) {
+  console.log(
+    `[marking] ${new Date().toISOString()} rubric=${rubricId} stop_reason=${stopReason} input_tokens=${inputTokens ?? "n/a"} output_tokens=${outputTokens ?? "n/a"}`,
+  );
+}
+
 export async function markSubmission(rubric: Rubric, anonymisedSubmission: string): Promise<MarkOutcome> {
   const response = await anthropic.messages.parse({
     model: "claude-opus-4-8",
@@ -148,14 +173,26 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
     },
     system: buildSystemPrompt(rubric),
     messages: [{ role: "user", content: buildUserPrompt(rubric, anonymisedSubmission) }],
+  }).catch((err: unknown) => {
+    // The SDK threw before returning a response, so there is no stop reason or usage. Log the error class only.
+    logUsage(rubric.id, `none(${err instanceof Error ? err.name : "unknown"})`, null, null);
+    throw err;
   });
 
+  logUsage(rubric.id, String(response.stop_reason), response.usage.input_tokens, response.usage.output_tokens);
+
   if (!response.parsed_output) {
-    throw new Error("Marking model did not return a parsable result");
+    throw new Error(
+      `Marking model did not return a parsable result (stop_reason=${response.stop_reason}, output_tokens=${response.usage.output_tokens})`,
+    );
   }
 
   const result = response.parsed_output;
-  const { mark, borderline } = computeBand(result.rawScore, result.boundaryCase);
+  const band = computeBand(result.rawScore, result.boundaryCase, result.ceilingBand, result.presenceEvidence);
+  const { mark, capped } = band;
+  // An empty bandReasoning means the reasoning step was skipped, so the boundary decision was not
+  // preceded by written reasoning. Flag for human review; never change the mark because of it.
+  const borderline = band.borderline || result.bandReasoning.trim().length === 0;
   const boundaryBands: [number, number] | null =
     result.boundaryCase && result.boundaryBandLower !== null && result.boundaryBandUpper !== null
       ? [result.boundaryBandLower, result.boundaryBandUpper]
@@ -165,6 +202,8 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
     rawScore: result.rawScore,
     mark,
     borderline,
+    ceilingBand: result.ceilingBand,
+    capped,
     presenceEvidence: result.presenceEvidence,
     bandReasoning: result.bandReasoning,
     boundaryCase: result.boundaryCase,

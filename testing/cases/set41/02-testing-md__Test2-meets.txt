@@ -1,0 +1,3 @@
+I wrote a short paragraph explaining a price increase to a client. It was blunt and a bit terse. I then asked an LLM to write the same explanation.
+
+The LLM version was easier to read and more engaging - it used a friendlier tone and better structure with a clear opening and closing line. Mine felt more like an internal note than something meant for a client. The LLM's version reads more like something a human customer service rep would send, while mine reads more like a quick Slack message. Neither felt obviously AI-generated to me.

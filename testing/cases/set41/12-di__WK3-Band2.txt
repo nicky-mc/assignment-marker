@@ -1,0 +1,1 @@
+Shared Canva link works. Covers two topics (LLM types/brands/models, and limitations of LLMs) in the learner's own words, with some genuine explanation ("GPT models are made by OpenAI and Claude is made by Anthropic - they're trained differently but I'm not totally sure how"). Only 4 slides total, quite thin on detail, no sources linked, no visuals beyond stock icons.

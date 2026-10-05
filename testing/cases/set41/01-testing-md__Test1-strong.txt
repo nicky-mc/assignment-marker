@@ -1,0 +1,5 @@
+I wrote about how I'd tell a customer their order was delayed. My version was short and apologetic but a bit robotic. I then asked an LLM to write the same update.
+
+The LLM's version was more polished and structured, with a clear apology, reason, and next steps. It read as more professional but slightly generic - mine felt more personal even though it was rougher. Neither reads as obviously AI-written once trimmed down, but the LLM's version leans on some stock phrases ("we sincerely apologise for any inconvenience") that mine didn't have.
+
+To improve the AI output, I'd prompt it to avoid stock apology phrases and to mention the specific delay reason up front rather than at the end. I already tried a follow-up prompt asking it to "sound like a person messaging a colleague, not a corporate template" and the result was noticeably better - shorter sentences, no stock phrases, and it kept the useful structure.

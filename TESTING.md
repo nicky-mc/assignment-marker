@@ -16,6 +16,8 @@ curl -s http://localhost:3000/api/mark \
 
 > I wrote about how I'd tell a customer their order was delayed. My version was short and apologetic but a bit robotic. I then asked an LLM to write the same update.
 >
+> What I wrote: "Sorry, your order won't arrive on Thursday. The courier lost a pallet at the depot, we only found out this morning. I have rebooked it for Monday. I will email the tracking link once it is scanned. If Monday does not work, tell me. Sorry again for the hassle. Thanks for your patience."
+>
 > The LLM's version was more polished and structured, with a clear apology, reason, and next steps. It read as more professional but slightly generic — mine felt more personal even though it was rougher. Neither reads as obviously AI-written once trimmed down, but the LLM's version leans on some stock phrases ("we sincerely apologise for any inconvenience") that mine didn't have.
 >
 > To improve the AI output, I'd prompt it to avoid stock apology phrases and to mention the specific delay reason up front rather than at the end. I already tried a follow-up prompt asking it to "sound like a person messaging a colleague, not a corporate template" and the result was noticeably better — shorter sentences, no stock phrases, and it kept the useful structure.
@@ -26,6 +28,8 @@ curl -s http://localhost:3000/api/mark \
 
 > I wrote a short paragraph explaining a price increase to a client. It was blunt and a bit terse. I then asked an LLM to write the same explanation.
 >
+> What I wrote: "From 1 April our monthly fee goes up from 400 to 450 pounds. Costs have risen and we can't absorb them any longer. The service stays the same. If you want to discuss it, call me this week. Let me know by Friday. Otherwise the new price applies to your next invoice. Thanks."
+>
 > The LLM version was easier to read and more engaging — it used a friendlier tone and better structure with a clear opening and closing line. Mine felt more like an internal note than something meant for a client. The LLM's version reads more like something a human customer service rep would send, while mine reads more like a quick Slack message. Neither felt obviously AI-generated to me.
 
 **Expect:** mark 3/4 (meets the 50-100 word evaluation requirement, addresses the comparison questions, but gives no next steps to improve the AI output — so the stretch goal isn't met). No mismatch, no borderline badge.
@@ -33,6 +37,8 @@ curl -s http://localhost:3000/api/mark \
 ## Test 3 — thin submission (expect a low mark, e.g. 1/4)
 
 > I wrote something and the AI also wrote something. The AI one was better I think. It sounded fine. Not much else to say really, they were both okay.
+>
+> What I wrote: "Team, the printer on floor two is broken again. Please use the one on floor three until it's fixed. I've logged a ticket with IT and they said it should be sorted by Wednesday. If you have anything urgent to print, send it to me and I'll do it from my desk. Thanks for bearing with us."
 
 **Expect:** mark 1/4 (attempted, but doesn't show understanding — no real comparison of readability/engagement/human-vs-AI, no evidence of critical evaluation). No mismatch, no borderline badge.
 
@@ -53,6 +59,8 @@ Marked against the **Week 1** rubric, but the content is actually a Week 2 SWOT 
 ## Test 5 — borderline (expect it to round up to 3 with the borderline badge)
 
 > I wrote a couple of sentences about announcing a new feature to users, then had an LLM write something similar. The LLM version read more smoothly, using shorter sentences than mine. Beyond that I didn't really compare them properly - I think mine sounded a bit more human because it had an odd turn of phrase in it, but I'm not fully sure that's a fair way to judge it. Both were fine overall, and I'd probably use the AI one as a starting point.
+>
+> What I wrote: "We've finally added dark mode, which people have been asking for since roughly the dawn of time. It's under Settings, then Display. Switch it on and your eyes will thank you at midnight. If something looks odd, let us know and we'll chase it down. Hope you like it, and thanks for the patience."
 
 **Expect:** this touches on readability and the human-vs-AI question but stays surface-level and self-admits it isn't a full comparison — genuinely arguable between "incomplete but shows understanding" (2) and "meets expectations" (3). Expect a raw score around 2.5–2.6, which rounds up to **mark 3/4** with the **Borderline** badge shown.
 

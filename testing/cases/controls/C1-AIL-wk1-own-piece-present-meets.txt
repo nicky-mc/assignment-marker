@@ -1,0 +1,13 @@
+My own writing (written without any AI help, about 95 words):
+
+"Last Tuesday our main supplier told us the new batch of packaging would arrive a week late. I rang the three customers with orders due that week and explained the delay honestly, offering each either a partial shipment or a small discount on their next order. Two chose the partial shipment and one preferred to wait. I then updated our order tracker and flagged the delay to the warehouse team so they could re-plan the pick schedule. It was stressful, but being upfront early meant nobody was surprised, and all three customers stayed with us."
+
+The prompt I gave the LLM: "Write about how I handled a delayed packaging shipment from a supplier, in the first person, in about 100 words."
+
+The LLM's output:
+
+"When our packaging supplier warned that a shipment would arrive a week late, I immediately contacted every affected customer to explain the situation transparently. I offered flexible solutions, including partial shipments and discounts on future orders, and coordinated closely with our warehouse team to adjust the schedule. By communicating proactively and maintaining clear records, I minimised disruption and preserved customer trust throughout the delay."
+
+My evaluation:
+
+"The LLM version is smoother and more polished, with tighter sentences, but it reads as generic: phrases like "maintaining clear records" and "preserved customer trust" sound like a corporate summary rather than something I would say. Mine is more engaging because it has specific details, such as the three customers and what each of them chose, though it is a bit rambling. I think mine reads as more obviously human, while the AI version could only pass as human in a business report."

@@ -1,0 +1,13 @@
+My own writing (written without any AI help, about 90 words):
+
+"Our weekly team meeting kept overrunning to an hour, so last month I changed it. I sent the agenda the day before, asked each person to post updates in the team chat instead of reading them out, and kept the meeting only for decisions. The first week it dropped to twenty-five minutes. Two people said they missed the chat about weekends, so now we spend the first two minutes on that. It feels shorter, and people seem less tired by Friday afternoon."
+
+The prompt I gave the LLM: "Write about how I shortened my team's weekly meeting, first person, about 100 words."
+
+The LLM's output:
+
+"To tackle our overrunning weekly meeting, I introduced a streamlined format. By circulating the agenda in advance and moving routine updates to our team chat, we reserved meeting time for decisions alone. The result was a dramatic reduction in duration, from an hour to twenty-five minutes, which boosted productivity and morale across the team."
+
+My evaluation:
+
+"The LLM version is crisper and more confident, but it flattens the story: it drops the two-minute chat about weekends that people asked for, and "boosted productivity and morale" is a claim I never made. Mine is warmer and more specific, though less tidy. To improve the AI output I would prompt it to keep my specific details and avoid unsupported claims, and I have already tried the follow-up "keep the numbers I gave you and do not add benefits I did not mention", which gave a much more faithful draft."
