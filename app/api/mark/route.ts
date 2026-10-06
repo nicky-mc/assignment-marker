@@ -1,7 +1,8 @@
 import { getRubric, RubricStoreError } from "@/lib/rubricStore";
 import { markSubmission } from "@/lib/marking";
 import { getAccess } from "@/lib/auth/access";
-import { checkRateLimit, MARKS_PER_HOUR } from "@/lib/auth/rateLimit";
+import { checkRateLimit, DRAFT_TRIES_PER_HOUR, MARKS_PER_HOUR } from "@/lib/auth/rateLimit";
+import { getDraftRow, rowToInput } from "@/lib/rubricAdmin/store";
 
 export async function POST(request: Request) {
   // Access first, so a request that is not allowed never reaches the AI and spends no credits.
@@ -18,24 +19,33 @@ export async function POST(request: Request) {
   if (access.status === "error") {
     return Response.json({ error: "Could not check your access just now. Please try again shortly." }, { status: 503 });
   }
-  if (access.email) {
-    const limit = checkRateLimit(access.email);
-    if (!limit.ok) {
-      return Response.json(
-        { error: `You have reached the limit of ${MARKS_PER_HOUR} marks an hour. Please try again in about ${limit.retryAfterMinutes} minute${limit.retryAfterMinutes === 1 ? "" : "s"}.` },
-        { status: 429 },
-      );
-    }
-  }
 
   // Only a rubric id and the submission are read from the request. Rubric text never comes from the client.
-  let body: { rubricId?: string; anonymisedSubmission?: string };
+  let body: { rubricId?: string; anonymisedSubmission?: string; draft?: boolean };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: "Request body must be JSON" }, { status: 400 });
   }
   const { rubricId, anonymisedSubmission } = body;
+  // Admins only: try a rubric that is still a draft. Real marking never uses drafts.
+  const wantsDraft = body.draft === true;
+  if (wantsDraft && access.role !== "admin") {
+    return Response.json({ error: "Only admins can try a draft rubric." }, { status: 403 });
+  }
+
+  if (access.email) {
+    const limit = wantsDraft
+      ? checkRateLimit(`draft:${access.email}`, Date.now(), DRAFT_TRIES_PER_HOUR)
+      : checkRateLimit(access.email);
+    if (!limit.ok) {
+      const what = wantsDraft ? `${DRAFT_TRIES_PER_HOUR} draft tries` : `${MARKS_PER_HOUR} marks`;
+      return Response.json(
+        { error: `You have reached the limit of ${what} an hour. Please try again in about ${limit.retryAfterMinutes} minute${limit.retryAfterMinutes === 1 ? "" : "s"}.` },
+        { status: 429 },
+      );
+    }
+  }
 
   if (!rubricId || !anonymisedSubmission || !anonymisedSubmission.trim()) {
     return Response.json(
@@ -46,7 +56,12 @@ export async function POST(request: Request) {
 
   let rubric;
   try {
-    rubric = await getRubric(rubricId);
+    if (wantsDraft) {
+      const row = await getDraftRow(rubricId);
+      rubric = row && { ...rowToInput(row), version: row.version, source: "database" as const };
+    } else {
+      rubric = await getRubric(rubricId);
+    }
   } catch (err) {
     const message = err instanceof RubricStoreError ? err.message : "Could not load the rubric.";
     return Response.json({ error: `${message} Nothing was marked.` }, { status: 503 });
@@ -57,7 +72,7 @@ export async function POST(request: Request) {
 
   try {
     const outcome = await markSubmission(rubric, anonymisedSubmission);
-    return Response.json({ ...outcome, rubric: { version: rubric.version, source: rubric.source } });
+    return Response.json({ ...outcome, rubric: { version: rubric.version, source: rubric.source, ...(wantsDraft ? { draft: true } : {}) } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error while marking";
     return Response.json({ error: message }, { status: 502 });
