@@ -30,8 +30,7 @@ export interface MarkOutcome {
   };
 }
 
-// Focus rings: visible on the purple bar, and on the neutral reading surface in both modes.
-const FOCUS_ON_BAR = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+// Focus ring: visible on the neutral reading surface in both modes.
 const FOCUS_ON_SURFACE =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary";
 
@@ -144,7 +143,6 @@ export default function ResultCard({
   copied: boolean;
 }) {
   const uid = useId();
-  const [showDetails, setShowDetails] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   const notes = result.markerNotes;
@@ -162,8 +160,6 @@ export default function ResultCard({
   const toggle = (k: string) => setOpen((prev) => ({ ...prev, [k]: !prev[k] }));
   const toggleAll = () => setOpen(Object.fromEntries(evidenceKeys.map((k) => [k, !allShown])));
 
-  const detailsId = `${uid}-details`;
-
   return (
     <div className="flex flex-col gap-4">
       {/* a. Summary bar */}
@@ -179,9 +175,8 @@ export default function ResultCard({
             {result.mark}/4
           </p>
         )}
-        {(result.borderline || result.capped || result.topicMismatch) && (
+        {(result.capped || result.topicMismatch) && (
           <ul className="flex flex-wrap gap-2" aria-label="Flags">
-            {result.borderline && <Badge glyph="◐">Borderline</Badge>}
             {result.capped && <Badge glyph="▼">Capped</Badge>}
             {result.topicMismatch && <Badge glyph="!">May not match the assignment</Badge>}
           </ul>
@@ -191,24 +186,7 @@ export default function ResultCard({
             Mark capped at {result.mark}: a required element was not found in the submission
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-3">
-          {result.rubric?.source === "database" && (
-            <span className="text-sm">Rubric v{result.rubric.version}, database</span>
-          )}
-          <ToggleButton
-            expanded={showDetails}
-            controls={detailsId}
-            onClick={() => setShowDetails((v) => !v)}
-            className={`border-brand-secondary/70 text-brand-secondary ${FOCUS_ON_BAR}`}
-          >
-            Details
-          </ToggleButton>
-        </div>
-        {showDetails && (
-          <p id={detailsId} className="text-sm">
-            Raw score {result.rawScore.toFixed(1)}
-          </p>
-        )}
+        {result.rubric?.source === "database" && <p className="text-sm">Rubric v{result.rubric.version}, database</p>}
       </section>
 
       {/* b. For the marker */}
