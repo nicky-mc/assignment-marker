@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-06: Add plain-English marker rationale and evidence
+
+- New `markerNotes` object after `feedback` in the schema (`lib/marking.ts`): a plain-English rationale, evidence for the explanation, and a why plus evidence for each next step. Prompt rules added, `max_tokens` raised from 4000 to 6000.
+- `components/MarkingForm.tsx` shows "Why this mark" and the evidence blocks on the marker-facing card only; the editable "Feedback to send" text is built exactly as before and contains none of it.
+- **Not yet run against the API.** Checked with `tsc` and lint only.
+
 ## 2026-09-04: Fix DI week 3/4 mix-up, dropdown order, remove Borderline badge
 
 - **DI week labels were swapped**: "Present Your AI Research" was labelled Week 3 and "AI Tools Showdown: NotebookLM vs Gemini Gems" was labelled Week 4, the wrong way round. Swapped the `week` field on both `lib/rubrics.ts` entries (`di-wk3-ai-research-presentation` is now `week: "Week 4"`, `di-wk4-notebooklm-vs-gems` is now `week: "Week 3"`) - the ids and all other rubric content stay attached to their existing topics, only the displayed week label moved.

@@ -4,6 +4,15 @@ import { anthropic } from "./anthropic";
 import { BAND_DESCRIPTIONS, Rubric } from "./rubrics";
 import { computeBand } from "./scoring";
 
+const EvidenceSchema = z.object({
+  type: z.enum(["quote", "absence"]).describe('Exactly "quote" if text is copied from the submission, or exactly "absence" if text describes something expected that was not found.'),
+  text: z
+    .string()
+    .describe(
+      "If type is quote: about 5 to 25 words copied exactly from the submission, never invented. If type is absence: one short plain sentence saying what was expected and not found.",
+    ),
+});
+
 export const MarkingResultSchema = z.object({
   topicMismatch: z
     .boolean()
@@ -85,6 +94,24 @@ export const MarkingResultSchema = z.object({
       .describe("Two to four concrete, bullet-pointed next steps for future assignments."),
     motivation: z.string().describe("One sentence of encouragement/motivation for future assignments."),
   }),
+  markerNotes: z
+    .object({
+      rationale: z
+        .string()
+        .describe(
+          "For the marker only, never sent to the learner. 2 to 4 short sentences in plain everyday English restating the reasoning already in bandReasoning and presenceEvidence. No band numbers or rubric jargon. Do not introduce any new reason.",
+        ),
+      explanationEvidence: EvidenceSchema.describe("Evidence from the submission that backs up feedback.explanation."),
+      nextStepNotes: z
+        .array(
+          z.object({
+            evidence: EvidenceSchema.describe("Evidence from the submission that relates to this next step."),
+            why: z.string().describe("One plain sentence on why this next step will help this learner."),
+          }),
+        )
+        .describe("Exactly one entry per item in feedback.nextSteps, in the same order."),
+    })
+    .describe("Notes for the marker only. Written after feedback. Never repeated in or copied into feedback."),
 });
 
 export type MarkingResult = z.infer<typeof MarkingResultSchema>;
@@ -108,6 +135,8 @@ export interface MarkOutcome {
   topicMismatch: boolean;
   mismatchReason: string;
   feedback: MarkingResult["feedback"];
+  /** Plain-English notes and evidence for the marker only. Never part of the feedback sent to the learner. */
+  markerNotes: MarkingResult["markerNotes"];
 }
 
 function buildSystemPrompt(rubric: Rubric): string {
@@ -132,7 +161,15 @@ Feedback should:
 - Give two to four next steps, not more (avoid overwhelming the learner).
 - End with brief motivation for future assignments.
 - Always be positive in tone, with clear ways to improve.
-- Never use em-dashes. Use full stops, commas, or colons instead.`;
+- Never use em-dashes. Use full stops, commas, or colons instead.
+
+Marker notes (markerNotes, written after feedback, for the marker only and never sent to the learner):
+- Use plain English: everyday words, short sentences, no band numbers, no rubric jargon. A busy marker should be able to read it in 20 seconds.
+- rationale: 2 to 4 sentences restating the reasoning already in bandReasoning and presenceEvidence in plain words. Do not introduce any new reason.
+- explanationEvidence: evidence from the submission for the explanation in the feedback.
+- nextStepNotes: exactly one entry per next step, in the same order as feedback.nextSteps. Each has the evidence first, then why: one plain sentence on why that step will help this learner.
+- Evidence of type "quote" must be copied exactly from the submission, about 5 to 25 words. Never invent or tidy up a quote. Evidence of type "absence" says what was expected and not found.
+- Never use em-dashes in markerNotes either.`;
 }
 
 function buildUserPrompt(rubric: Rubric, anonymisedSubmission: string): string {
@@ -164,8 +201,8 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
     model: "claude-opus-4-8",
     // Raised from 2000: the presenceEvidence field (a list of criteria, each with a quote) adds enough
     // output length that submissions with several presence-based criteria were hitting the old ceiling
-    // and returning truncated, unparsable JSON.
-    max_tokens: 4000,
+    // and returning truncated, unparsable JSON. Raised again from 4000 for markerNotes.
+    max_tokens: 6000,
     thinking: { type: "adaptive" },
     output_config: {
       effort: "high",
@@ -211,5 +248,6 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
     topicMismatch: result.topicMismatch,
     mismatchReason: result.mismatchReason,
     feedback: result.feedback,
+    markerNotes: result.markerNotes,
   };
 }

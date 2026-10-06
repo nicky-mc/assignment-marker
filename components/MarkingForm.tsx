@@ -19,6 +19,30 @@ interface MarkOutcome {
     nextSteps: string[];
     motivation: string;
   };
+  markerNotes: {
+    rationale: string;
+    explanationEvidence: Evidence;
+    nextStepNotes: { evidence: Evidence; why: string }[];
+  };
+}
+
+interface Evidence {
+  type: "quote" | "absence";
+  text: string;
+}
+
+// Marker-only: shown under the feedback, never part of the editable "Feedback to send" text.
+function EvidenceBlock({ evidence }: { evidence: Evidence }) {
+  return (
+    <blockquote className="mt-1 border-l-4 border-brand-primary/40 pl-3 text-xs">
+      <span className="block font-medium">
+        {evidence.type === "quote"
+          ? "From the submission (copied by the AI, please check)"
+          : `Not found in the submission: ${evidence.text}`}
+      </span>
+      {evidence.type === "quote" && <span className="block italic">{evidence.text}</span>}
+    </blockquote>
+  );
 }
 
 function buildFeedbackText(result: MarkOutcome): string {
@@ -309,13 +333,38 @@ export default function MarkingForm() {
             </div>
           )}
 
+          {result.markerNotes?.rationale && (
+            <div className="flex flex-col gap-1 text-sm">
+              <h3 className="font-heading font-semibold">Why this mark</h3>
+              <p>{result.markerNotes.rationale}</p>
+            </div>
+          )}
+
           <div className="flex flex-col gap-2 text-sm">
             <p>{result.feedback.recognition}</p>
-            <p>{result.feedback.explanation}</p>
+            <div>
+              <p>{result.feedback.explanation}</p>
+              {result.markerNotes?.explanationEvidence && (
+                <EvidenceBlock evidence={result.markerNotes.explanationEvidence} />
+              )}
+            </div>
             <ul className="list-disc pl-5">
-              {result.feedback.nextSteps.map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
+              {result.feedback.nextSteps.map((step, i) => {
+                // Match by position; if the counts differ, show no note rather than a wrong one.
+                const notes = result.markerNotes?.nextStepNotes;
+                const note = notes && notes.length === result.feedback.nextSteps.length ? notes[i] : null;
+                return (
+                  <li key={i} className="mb-2">
+                    {step}
+                    {note && (
+                      <>
+                        <p className="text-xs mt-1">{note.why}</p>
+                        <EvidenceBlock evidence={note.evidence} />
+                      </>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
             <p>{result.feedback.motivation}</p>
           </div>
