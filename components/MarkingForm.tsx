@@ -3,47 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { anonymise, suggestTerms, type RedactionCategory } from "@/lib/anonymise";
 import { extractTextFromFile } from "@/lib/extractText";
-
-interface MarkOutcome {
-  rawScore: number;
-  mark: number;
-  borderline: boolean;
-  ceilingBand: number;
-  capped: boolean;
-  topicMismatch: boolean;
-  mismatchReason: string;
-  feedback: {
-    recognition: string;
-    explanation: string;
-    nextSteps: string[];
-    motivation: string;
-  };
-  rubric?: { version: number; source: "file" | "database" };
-  markerNotes: {
-    rationale: string;
-    explanationEvidence: Evidence;
-    nextStepNotes: { evidence: Evidence; why: string }[];
-  };
-}
-
-interface Evidence {
-  type: "quote" | "absence";
-  text: string;
-}
-
-// Marker-only: shown under the feedback, never part of the editable "Feedback to send" text.
-function EvidenceBlock({ evidence }: { evidence: Evidence }) {
-  return (
-    <blockquote className="mt-1 border-l-4 border-brand-primary/40 pl-3 text-xs">
-      <span className="block font-medium">
-        {evidence.type === "quote"
-          ? "From the submission (copied by the AI, please check)"
-          : `Not found in the submission: ${evidence.text}`}
-      </span>
-      {evidence.type === "quote" && <span className="block italic">{evidence.text}</span>}
-    </blockquote>
-  );
-}
+import ResultCard, { type MarkOutcome } from "./ResultCard";
 
 function buildFeedbackText(result: MarkOutcome): string {
   const lines: string[] = [];
@@ -550,96 +510,13 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
       )}
 
       {result && (
-        <div className="flex flex-col gap-3 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
-          {result.topicMismatch ? (
-            <div className="flex flex-col gap-1">
-              <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 px-3 py-1 text-sm font-medium">
-                May not match the assignment
-              </span>
-              <p className="text-sm">{result.mismatchReason}</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
-                <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
-                {result.rubric?.source === "database" && (
-                  <span className="text-xs text-brand-primary/70">Rubric v{result.rubric.version}, database</span>
-                )}
-              </div>
-              {result.capped && (
-                <p className="text-sm font-medium">
-                  Mark capped at {result.mark}: a required element was not found in the submission
-                </p>
-              )}
-            </div>
-          )}
-
-          {result.markerNotes?.rationale && (
-            <div className="flex flex-col gap-1 text-sm">
-              <h3 className="font-heading font-semibold">Why this mark</h3>
-              <p>{result.markerNotes.rationale}</p>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2 text-sm">
-            <p>{result.feedback.recognition}</p>
-            <div>
-              <p>{result.feedback.explanation}</p>
-              {result.markerNotes?.explanationEvidence && (
-                <EvidenceBlock evidence={result.markerNotes.explanationEvidence} />
-              )}
-            </div>
-            <ul className="list-disc pl-5">
-              {result.feedback.nextSteps.map((step, i) => {
-                // Match by position; if the counts differ, show no note rather than a wrong one.
-                const notes = result.markerNotes?.nextStepNotes;
-                const note = notes && notes.length === result.feedback.nextSteps.length ? notes[i] : null;
-                return (
-                  <li key={i} className="mb-2">
-                    {step}
-                    {note && (
-                      <>
-                        <p className="text-xs mt-1">{note.why}</p>
-                        <EvidenceBlock evidence={note.evidence} />
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            <p>{result.feedback.motivation}</p>
-          </div>
-        </div>
-      )}
-
-      {result && (
-        <div className="flex flex-col gap-2 rounded-md p-4 border-4 border-brand-primary bg-brand-secondary text-brand-primary">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <label htmlFor="editable-feedback" className="font-medium">
-              Feedback to send (editable)
-            </label>
-            <button
-              type="button"
-              onClick={handleCopyFeedback}
-              className="text-sm rounded-md border border-brand-primary/40 px-3 py-1 font-medium"
-            >
-              {feedbackCopied ? "Copied!" : "Copy"}
-            </button>
-          </div>
-          <p className="text-sm">
-            This is a starting point, not the finished feedback. Before it goes to the learner: check every
-            claim above is actually true of their work, adjust the tone to how you would normally talk to them,
-            add anything specific to their submission that the AI could not have known, and cut anything
-            generic or repeated. Edit directly below, then copy the result to wherever you send feedback.
-          </p>
-          <textarea
-            id="editable-feedback"
-            className="border border-brand-primary/30 rounded-md px-3 py-2 min-h-48 text-sm bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary"
-            value={editableFeedback}
-            onChange={(e) => setEditableFeedback(e.target.value)}
-          />
-        </div>
+        <ResultCard
+          result={result}
+          editableFeedback={editableFeedback}
+          onFeedbackChange={setEditableFeedback}
+          onCopy={handleCopyFeedback}
+          copied={feedbackCopied}
+        />
       )}
     </div>
   );
