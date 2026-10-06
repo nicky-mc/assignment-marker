@@ -4,11 +4,13 @@
 // Patterns that need Unicode property escapes or lookbehind are built with new RegExp(String.raw`...`)
 // so they work whatever the TypeScript target is. The i flag is never combined with \p{Lu}.
 
-export type RedactionCategory = "name" | "email" | "phone" | "link" | "id" | "address" | "postcode" | "other";
+export type RedactionCategory = "name" | "email" | "phone" | "link" | "id" | "address" | "postcode" | "business" | "other";
 
 export interface AnonymiseOptions {
   /** Marker-confirmed name parts to remove wherever they appear, e.g. ["Jane", "Doe"]. */
   names?: string[];
+  /** Marker-chosen business or other terms to remove, replaced by [BUSINESS]. Same matching as names. */
+  terms?: string[];
 }
 
 export interface AnonymiseResult {
@@ -90,6 +92,7 @@ const PLACEHOLDERS: Record<RedactionCategory, string> = {
   id: "[ID]",
   address: "[ADDRESS]",
   postcode: "[POSTCODE]",
+  business: "[BUSINESS]",
   other: "[REDACTED]",
 };
 
@@ -100,7 +103,7 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function buildNamesRegExp(names: string[] | undefined): RegExp | null {
+function buildWordsRegExp(names: string[] | undefined): RegExp | null {
   const parts = Array.from(
     new Set(
       (names ?? [])
@@ -126,6 +129,7 @@ export function anonymise(raw: string, opts?: AnonymiseOptions): AnonymiseResult
     id: 0,
     address: 0,
     postcode: 0,
+    business: 0,
     other: 0,
   };
 
@@ -159,9 +163,82 @@ export function anonymise(raw: string, opts?: AnonymiseOptions): AnonymiseResult
   redact(SIGNOFF_NEXTLINE_RE, "name");
   redact(SIGNOFF_SAMELINE_RE, "name");
 
-  const namesRe = buildNamesRegExp(opts?.names);
+  const termsRe = buildWordsRegExp(opts?.terms);
+  if (termsRe) redact(termsRe, "business");
+  const namesRe = buildWordsRegExp(opts?.names);
   if (namesRe) redact(namesRe, "name");
 
   const redactionCount = Object.values(counts).reduce((a, b) => a + b, 0);
   return { text, redactionCount, counts };
+}
+
+// ---- Suggestions for the "Check before marking" panel ----
+
+export interface TermSuggestion {
+  term: string;
+  count: number;
+}
+
+const STOP_WORDS = new Set(
+  "a an and are as at be but by for from has have he her his how i if in is it its my of on or our she so than that the their them then there these they this those to was we were what when where which who why will with you your also however because after before while although since both each every some any all one two three first second third finally overall therefore moreover furthermore instead given according under over between during".split(
+    " ",
+  ),
+);
+
+const ALLOWED_WORDS = new Set(
+  `gdpr ai uk eu us usa ico hmrc fca ofcom cma act acts law laws legal privacy data protection contract contracts employment copyright consumer rights intellectual property company companies regulation regulations directive bill code policy terms conditions liability tort negligence trademark patent confidentiality consent compliance equality discrimination health safety table row col
+  google microsoft stripe gohighlevel highlevel chatgpt claude gemini gems gem notebooklm copilot openai anthropic zapier slack notion canva excel word powerpoint zoom whatsapp linkedin facebook instagram tiktok youtube mailchimp shopify xero hubspot salesforce airtable midjourney perplexity github gmail drive docs sheets slides teams outlook meta amazon apple aws azure wordpress wix squarespace paypal zendesk intercom calendly typeform trello asana
+  january february march april may june july august september october november december monday tuesday wednesday thursday friday saturday sunday
+  tech educators digital innovators literacy dmai`.split(/\s+/),
+);
+
+const CAP_PHRASE_RE = new RegExp(
+  String.raw`\p{Lu}[\p{L}\p{N}'’&-]{0,40}(?:[ ]\p{Lu}[\p{L}\p{N}'’&-]{0,40}){0,3}`,
+  "gu",
+);
+
+function isSentenceStart(text: string, index: number): boolean {
+  let i = index - 1;
+  while (i >= 0 && (text[i] === " " || text[i] === "\t")) i--;
+  if (i < 0) return true;
+  const c = text[i];
+  if (c === "\n" || c === "\r" || c === "." || c === "!" || c === "?" || c === ":" || c === "•" || c === "-" || c === "*" || c === "|" || c === "/" || c === "]" || c === ")") return true;
+  return /\d/.test(c);
+}
+
+/**
+ * Capitalised words or phrases in the original text that appear mid-sentence or 3 or more times and are
+ * not on the allowlist. They are candidates for business or personal names the marker may want to remove.
+ */
+export function suggestTerms(text: string, exclude: string[] = []): TermSuggestion[] {
+  const excluded = new Set(exclude.map((e) => e.trim().toLowerCase()).filter(Boolean));
+  const stats = new Map<string, { count: number; mid: number }>();
+  for (const m of text.matchAll(CAP_PHRASE_RE)) {
+    const index = m.index ?? 0;
+    if (index > 0 && text[index - 1] === "[") continue;
+    const sentenceStart = isSentenceStart(text, index);
+    let words = m[0].split(" ");
+    // Drop leading and trailing common words ("The Risk Appetite" -> "Risk Appetite").
+    let startedMid = !sentenceStart;
+    while (words.length > 0 && STOP_WORDS.has(words[0].toLowerCase())) {
+      words = words.slice(1);
+      startedMid = true;
+    }
+    while (words.length > 0 && STOP_WORDS.has(words[words.length - 1].toLowerCase())) words = words.slice(0, -1);
+    if (words.length === 0) continue;
+    const term = words.join(" ");
+    if (term.length < 2) continue;
+    const lower = term.toLowerCase();
+    if (excluded.has(lower) || words.some((w) => excluded.has(w.toLowerCase()))) continue;
+    if (words.every((w) => ALLOWED_WORDS.has(w.toLowerCase()))) continue;
+    const entry = stats.get(term) ?? { count: 0, mid: 0 };
+    entry.count += 1;
+    if (startedMid) entry.mid += 1;
+    stats.set(term, entry);
+  }
+  return Array.from(stats, ([term, { count, mid }]) => ({ term, count, mid }))
+    .filter((s) => s.mid >= 1 || s.count >= 3)
+    .sort((a, b) => b.count - a.count || a.term.localeCompare(b.term))
+    .slice(0, 40)
+    .map(({ term, count }) => ({ term, count }));
 }

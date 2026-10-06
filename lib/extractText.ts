@@ -49,11 +49,51 @@ async function extractFromPdf(file: File): Promise<ExtractResult> {
   return { text };
 }
 
+function cellText(cell: Element): string {
+  const paragraphs = Array.from(cell.querySelectorAll("p"))
+    .map((p) => (p.textContent ?? "").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const parts = paragraphs.length > 0 ? paragraphs : [(cell.textContent ?? "").replace(/\s+/g, " ").trim()];
+  return parts.join(" / ");
+}
+
+/** Renders a table as labelled text: "[Table 1]", then "Row 1: [Col 1] a | [Col 2] b" per row. */
+function tableToText(table: HTMLTableElement, tableNumber: number): string {
+  const lines = [`[Table ${tableNumber}]`];
+  Array.from(table.rows).forEach((row, r) => {
+    const cells = Array.from(row.cells).map((cell, c) => `[Col ${c + 1}] ${cellText(cell)}`.trimEnd());
+    lines.push(`Row ${r + 1}: ${cells.join(" | ")}`);
+  });
+  return lines.join("\n");
+}
+
+function docxHtmlToText(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const blocks: string[] = [];
+  let tableNumber = 0;
+  for (const el of Array.from(doc.body.children)) {
+    if (el.tagName === "TABLE") {
+      tableNumber += 1;
+      blocks.push(tableToText(el as HTMLTableElement, tableNumber));
+    } else if (el.tagName === "UL" || el.tagName === "OL") {
+      for (const li of Array.from(el.children)) blocks.push(`- ${(li.textContent ?? "").trim()}`);
+    } else {
+      const text = (el.textContent ?? "").trim();
+      if (text) blocks.push(text);
+    }
+  }
+  return blocks.join("\n\n");
+}
+
 async function extractFromDocx(file: File): Promise<ExtractResult> {
   const mammoth = await import("mammoth");
   const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  const text = result.value.trim();
+  // Images are dropped: only text is wanted, and inlining them as base64 would be wasteful.
+  const result = await mammoth.convertToHtml(
+    { arrayBuffer },
+    { convertImage: mammoth.images.imgElement(async () => ({ src: "" })) },
+  );
+  const text = docxHtmlToText(result.value).trim();
   if (!text) {
     throw new Error("Couldn't find any text in that document.");
   }
