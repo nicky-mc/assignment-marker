@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import SignInButton from "@/components/SignInButton";
 import { authMode } from "@/lib/auth/config";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  await connection(); // per request: AUTH_MODE is read at runtime, not baked in at build time
   if (authMode() !== "on") redirect("/");
   const { error } = await searchParams;
   return (

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-07: Run access checks per request
+
+- `requirePageAccess`, `requireAdmin` and the `/login` and `/no-access` pages now await `connection()`, so seven routes that were prerendered at build time (baking in the build-time `AUTH_MODE`) are dynamic. No change to what the checks decide.
+
 ## 2026-10-07: Rubric management screens for admins
 
 - `/admin/rubrics` (admin role only, checked on the server): list, new course, new and edit rubric with limits and prompt-injection safeguards, import and export JSON, approve and retire, and an admin-only "try a draft" through `/api/mark`. Only approved rubrics are used for marking; history is append-only.
