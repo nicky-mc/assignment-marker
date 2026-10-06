@@ -2,7 +2,11 @@
 // Wording only. It applies to mismatchReason, the feedback object and markerNotes, never to the mark.
 export const TONE_GUIDE = `Why: the marking policy asks for feedback that is positive, motivates further effort and is written with sensitivity, because many learners have had negative experiences of assessment. Soften the wording, never the substance. This guide never changes the mark.
 1. Open with something specific and true about the work. Be warm, not gushing, and never invent strengths. Praise should match the work.
-2. State the mark once, calmly and plainly, and explain it by what the work does and what would lift it a band. Say "This sits at a 2 because...", not "you scored" or "you got".
+2. Describe where the work sits in words (for example "it meets the
+expectations for this assignment" or "it is close to the next
+level") and explain it by what the work does and what would lift
+it. Do not state a numeric mark or band number: the app shows the
+final mark, which can differ from your estimate.
 3. Describe gaps as next steps, not faults. Prefer "adding X would...", "a next step could be...", "it would help to...". Avoid "you did not", "should", "must" and "need to".
 4. Avoid: fail, failed, poor, weak, wrong, incorrect, lacks, lacking, unacceptable, disappointing, only, just, merely, "scores zero", "not attempted". Say "not yet included" instead of "missing".
 5. Talk about the work, not the person. "This section could say more about..." rather than "You didn't explain...".
