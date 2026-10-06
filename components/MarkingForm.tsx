@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { COURSES, getRubricsForCourse } from "@/lib/rubrics";
 import { anonymise, suggestTerms, type RedactionCategory } from "@/lib/anonymise";
 import { extractTextFromFile } from "@/lib/extractText";
 
@@ -19,6 +18,7 @@ interface MarkOutcome {
     nextSteps: string[];
     motivation: string;
   };
+  rubric?: { version: number; source: "file" | "database" };
   markerNotes: {
     rationale: string;
     explanationEvidence: Evidence;
@@ -123,8 +123,22 @@ function namesFromFileName(fileName: string): string[] {
   return Array.from(new Set(beforeUnderscore.split(/[-\s]+/).filter(Boolean)));
 }
 
-export default function MarkingForm() {
-  const [courseId, setCourseId] = useState(COURSES[0].id);
+export interface CourseOption {
+  id: string;
+  name: string;
+}
+
+export interface RubricOption {
+  id: string;
+  courseId: string;
+  week: string;
+  title: string;
+  overview: string;
+}
+
+export default function MarkingForm({ courses, rubrics }: { courses: CourseOption[]; rubrics: RubricOption[] }) {
+  const getRubricsForCourse = (id: string) => rubrics.filter((r) => r.courseId === id);
+  const [courseId, setCourseId] = useState(courses[0].id);
   const rubricsForCourse = getRubricsForCourse(courseId);
   const [rubricId, setRubricId] = useState(rubricsForCourse[0].id);
   const [rawSubmission, setRawSubmission] = useState("");
@@ -291,7 +305,7 @@ export default function MarkingForm() {
             value={courseId}
             onChange={(e) => handleCourseChange(e.target.value)}
           >
-            {COURSES.map((c) => (
+            {courses.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -549,6 +563,9 @@ export default function MarkingForm() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-heading font-semibold text-brand-primary">{result.mark}/4</span>
                 <span className="text-xs text-brand-primary/70">(raw score {result.rawScore.toFixed(1)})</span>
+                {result.rubric?.source === "database" && (
+                  <span className="text-xs text-brand-primary/70">Rubric v{result.rubric.version}, database</span>
+                )}
               </div>
               {result.capped && (
                 <p className="text-sm font-medium">

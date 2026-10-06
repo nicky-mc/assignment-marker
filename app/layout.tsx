@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Space_Grotesk, Lexend_Deca } from "next/font/google";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
+import UserMenu from "@/components/UserMenu";
 import "./globals.css";
 
 const THEME_INIT_SCRIPT = `
@@ -49,7 +50,10 @@ export default function RootLayout({
         </Script>
         <header className="w-full max-w-3xl mx-auto pt-4 pb-0 pl-12 pr-6 flex items-center justify-between">
           <Logo />
-          <ThemeToggle />
+          <div className="flex items-center gap-3">
+            <UserMenu />
+            <ThemeToggle />
+          </div>
         </header>
         {children}
       </body>
