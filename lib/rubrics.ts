@@ -46,7 +46,7 @@ export const RUBRICS: Rubric[] = [
     id: "wk2-swot-ai-industry",
     courseId: "ai-literacy",
     week: "Week 2",
-    title: "SWOT Analysis on Use of AI in Your Industry",
+    title: "Evaluate the Ethical Use of AI as it Applies to You",
     overview:
       "A SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis of legal and ethical issues around AI use in the learner's business/industry.",
     requirements:
