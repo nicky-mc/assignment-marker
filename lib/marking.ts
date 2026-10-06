@@ -3,6 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { anthropic } from "./anthropic";
 import { BAND_DESCRIPTIONS, Rubric } from "./rubrics";
 import { computeBand } from "./scoring";
+import { TONE_GUIDE } from "./toneGuide";
 
 const EvidenceSchema = z.object({
   type: z.enum(["quote", "absence"]).describe('Exactly "quote" if text is copied from the submission, or exactly "absence" if text describes something expected that was not found.'),
@@ -149,7 +150,7 @@ ${bands.map((b) => `- ${b}`).join("\n")}
 Marking approach:
 - Look for reasons to give marks, rather than reasons not to.
 - Mark strictly against the band descriptions above, which are specific to this assignment.
-- If the submission clearly is not attempting this assignment (wrong topic entirely), set topicMismatch to true and explain what it looks like instead - do not force a confident score onto unrelated content.
+- If the submission clearly is not attempting this assignment (wrong topic entirely), set topicMismatch to true and explain what it looks like instead - do not force a confident score onto unrelated content. Write mismatchReason following the tone guide below.
 - Before any other reasoning, work through presenceEvidence: identify every presence-based criterion in the rubric above (something specific that must exist in the submission, e.g. a named artefact, a required comparison, a specific field, a required action) as distinct from quality-based criteria (how well something was done). For each presence-based criterion, quote the exact submission text that satisfies it, or mark it unmet if you cannot find that evidence anywhere in the text - do not infer that something exists because the rest of the submission reads as strong or complete. Give each item a level: "required" means the rubric's 3-mark requirements say it must exist in the submission; "stretch" means only the 4-mark stretch goal asks for it. List only artefacts that must physically exist in the submission. Never list quality judgements.
 - Work through bandReasoning next. Apply a hard ceiling first: if any presence-based criterion needed for the meets-expectations band is unmet in presenceEvidence, the submission cannot reach meets-expectations or above regardless of how strong the rest of the work is - cap it at the band that reflects a missing/incomplete required element instead, and only consider meets-expectations or higher once every such criterion is satisfied. Then state which band the submission best fits and why, and explicitly consider whether a reasonable second marker could genuinely argue for the adjacent band above or below. This applies at every boundary (0/1, 1/2, 2/3, 3/4), not just one midpoint - work through whichever adjacent pair is actually in play for this submission.
 - Only after that reasoning is written down, decide boundaryCase: true if you found a genuine case for two adjacent bands, false if one band is clearly the best fit and you would not expect a second marker to disagree. If true, set boundaryBandLower/boundaryBandUpper to the two band numbers in tension.
@@ -162,6 +163,10 @@ Feedback should:
 - End with brief motivation for future assignments.
 - Always be positive in tone, with clear ways to improve.
 - Never use em-dashes. Use full stops, commas, or colons instead.
+- Write the feedback object following the tone guide below, in British English.
+
+Tone guide (applies only to mismatchReason, the feedback object and markerNotes, never to bandReasoning, presenceEvidence, boundaryCase or any score):
+${TONE_GUIDE}
 
 Marker notes (markerNotes, written after feedback, for the marker only and never sent to the learner):
 - Use plain English: everyday words, short sentences, no band numbers, no rubric jargon. A busy marker should be able to read it in 20 seconds.
@@ -169,7 +174,8 @@ Marker notes (markerNotes, written after feedback, for the marker only and never
 - explanationEvidence: evidence from the submission for the explanation in the feedback.
 - nextStepNotes: exactly one entry per next step, in the same order as feedback.nextSteps. Each has the evidence first, then why: one plain sentence on why that step will help this learner.
 - Evidence of type "quote" must be copied exactly from the submission, about 5 to 25 words. Never invent or tidy up a quote. Evidence of type "absence" says what was expected and not found.
-- Never use em-dashes in markerNotes either.`;
+- Never use em-dashes in markerNotes either.
+- Write markerNotes following the tone guide above (point 9 for marker-facing text), in British English.`;
 }
 
 function buildUserPrompt(rubric: Rubric, anonymisedSubmission: string): string {

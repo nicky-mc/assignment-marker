@@ -531,7 +531,7 @@ export default function MarkingForm() {
           {result.topicMismatch ? (
             <div className="flex flex-col gap-1">
               <span className="inline-block w-fit rounded-full bg-amber-100 text-amber-900 px-3 py-1 text-sm font-medium">
-                Possible mismatch
+                May not match the assignment
               </span>
               <p className="text-sm">{result.mismatchReason}</p>
             </div>
