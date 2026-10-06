@@ -1,4 +1,5 @@
 import { forbidden, redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getAccess } from "./access";
 
 /**
@@ -6,6 +7,7 @@ import { getAccess } from "./access";
  * a verified session AND the 'admin' role in allowed_users. Markers and everyone else get a 403 page.
  */
 export async function requireAdmin(): Promise<{ email: string }> {
+  await connection(); // per request, never prerendered (see requirePageAccess)
   const access = await getAccess();
   if (access.status === "unauthenticated") redirect("/login");
   if (access.status === "misconfigured") redirect("/config-error");

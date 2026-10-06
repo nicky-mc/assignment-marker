@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import SignOutButton from "@/components/SignOutButton";
 import { getAccess } from "@/lib/auth/access";
 
 export default async function NoAccessPage() {
+  await connection(); // per request, never prerendered
   const access = await getAccess();
   if (access.status === "unauthenticated") redirect("/login");
   if (access.status === "ok") redirect("/");
