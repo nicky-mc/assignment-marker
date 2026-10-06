@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Rubric management screens for admins
+
+- `/admin/rubrics` (admin role only, checked on the server): list, new course, new and edit rubric with limits and prompt-injection safeguards, import and export JSON, approve and retire, and an admin-only "try a draft" through `/api/mark`. Only approved rubrics are used for marking; history is append-only.
+- Needs `supabase/migrations/002_rubric_admin.sql` (rubric key becomes id + version, courses table, `approve_rubric` function); new `REQUIRE_SECOND_APPROVER` switch; `scripts/check-rubric-validator.ts` (12 of 12).
+- **Not yet run** against Supabase: checked with `tsc`, lint and the validator script only.
+
 ## 2026-10-07: Optional Google sign-in and Supabase rubric store (off by default)
 
 - New switches `AUTH_MODE` and `RUBRIC_SOURCE` (defaults keep today's behaviour); sign-in, allowlist, per-user rate limit and `proxy.ts` live in `lib/auth/`, and all rubric access goes through `lib/rubricStore.ts` with file and Supabase implementations.
