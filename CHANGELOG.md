@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Optional Google sign-in and Supabase rubric store (off by default)
+
+- New switches `AUTH_MODE` and `RUBRIC_SOURCE` (defaults keep today's behaviour); sign-in, allowlist, per-user rate limit and `proxy.ts` live in `lib/auth/`, and all rubric access goes through `lib/rubricStore.ts` with file and Supabase implementations.
+- `supabase/migrations/001_init.sql`, seed and read-back scripts, `.env.example`; production fails closed unless `AUTH_MODE=on`. Result card shows "Rubric vN, database" only for database rubrics.
+- **Not yet run:** no SQL, scripts or sign-in tried; checked with `tsc` and lint only.
+
 ## 2026-10-06: Add plain-English marker rationale and evidence
 
 - New `markerNotes` object after `feedback` in the schema (`lib/marking.ts`): a plain-English rationale, evidence for the explanation, and a why plus evidence for each next step. Prompt rules added, `max_tokens` raised from 4000 to 6000.
