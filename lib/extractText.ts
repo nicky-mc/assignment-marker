@@ -1,6 +1,8 @@
 export interface ExtractResult {
   text: string;
   warning?: string;
+  /** Informational only: shown in the upload area, never blocks marking. */
+  notice?: string;
 }
 
 const PLAIN_TEXT_EXTENSIONS = [".txt", ".md", ".markdown"];
@@ -25,19 +27,71 @@ function normalizeExtractedText(text: string): string {
     .trim();
 }
 
+const PDF_TABLE_NOTICE =
+  "This PDF seems to contain a table. PDF tables are read approximately, so please check the preview. A Word file or Google Doc link keeps tables more reliably.";
+
+const CELL_BREAK = "\n\n[next cell]\n\n";
+const COLUMN_GAP = " | ";
+
+interface PdfItemLike {
+  str: string;
+  width: number;
+  height: number;
+  transform: number[];
+}
+
+/**
+ * Joins one page's text items with a space, as before, except where the position shows a table:
+ * a sharp jump up (more than 3 line heights) starts a new cell, and a wide gap to the right (more than
+ * 2 line heights) on the same line separates header cells. Nothing is added when neither fires, so
+ * ordinary single-column PDFs come out exactly as they did before.
+ */
+export function joinPdfItems(items: PdfItemLike[]): { text: string; markers: number } {
+  let text = "";
+  let markers = 0;
+  let prev: PdfItemLike | null = null;
+  items.forEach((item, i) => {
+    let sep = i > 0 ? " " : "";
+    if (prev && item.str.trim()) {
+      const lineHeight = Math.abs(prev.height) || Math.abs(prev.transform[3]);
+      const dy = item.transform[5] - prev.transform[5];
+      const gapX = item.transform[4] - (prev.transform[4] + prev.width);
+      if (lineHeight > 0 && dy > 3 * lineHeight) {
+        sep = CELL_BREAK;
+        markers += 1;
+      } else if (lineHeight > 0 && Math.abs(dy) < lineHeight / 2 && gapX > 2 * lineHeight) {
+        sep = COLUMN_GAP;
+        markers += 1;
+      }
+    }
+    text += sep + item.str;
+    if (item.str.trim()) prev = item;
+  });
+  return { text, markers };
+}
+
 async function extractFromPdf(file: File): Promise<ExtractResult> {
   const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  // In the browser the worker is served from /public; elsewhere (e.g. Node scripts) pdf.js finds its own.
+  if (typeof window !== "undefined") pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
   const pageTexts: string[] = [];
+  let markers = 0;
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    const pageText = content.items.map((item) => ("str" in item ? item.str : "")).join(" ");
-    pageTexts.push(pageText);
+    // Position is compared within a page only; each page starts fresh.
+    const items = content.items.map((item) =>
+      "str" in item
+        ? { str: item.str, width: item.width, height: item.height, transform: item.transform }
+        : { str: "", width: 0, height: 0, transform: [0, 0, 0, 0, 0, 0] },
+    );
+    const page_ = joinPdfItems(items);
+    markers += page_.markers;
+    pageTexts.push(page_.text);
   }
 
   const text = pageTexts.join("\n\n").trim();
@@ -46,7 +100,7 @@ async function extractFromPdf(file: File): Promise<ExtractResult> {
       "No selectable text found in that PDF. It may be a scanned image rather than real text. Try copying and pasting the text instead.",
     );
   }
-  return { text };
+  return { text, notice: markers > 0 ? PDF_TABLE_NOTICE : undefined };
 }
 
 function cellText(cell: Element): string {

@@ -144,6 +144,7 @@ export default function MarkingForm() {
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [extractWarning, setExtractWarning] = useState<string | null>(null);
+  const [extractNotice, setExtractNotice] = useState<string | null>(null);
   const [feedbackCopied, setFeedbackCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -165,12 +166,14 @@ export default function MarkingForm() {
     setExtracting(true);
     setExtractError(null);
     setExtractWarning(null);
+    setExtractNotice(null);
     try {
-      const { text, warning } = await extractTextFromFile(file);
+      const { text, warning, notice } = await extractTextFromFile(file);
       handleSubmissionChange(text);
       setNames(namesFromFileName(file.name));
       setTerms([]);
       if (warning) setExtractWarning(warning);
+      if (notice) setExtractNotice(notice);
     } catch (err) {
       setExtractError(err instanceof Error ? err.message : "Could not read that file.");
     } finally {
@@ -212,6 +215,7 @@ export default function MarkingForm() {
     resetPreview();
     setExtractError(null);
     setExtractWarning(null);
+    setExtractNotice(null);
   }
 
   function addNames(raw: string) {
@@ -357,6 +361,11 @@ export default function MarkingForm() {
           </p>
         )}
         {extractWarning && <p className="text-sm text-amber-700 dark:text-amber-400">{extractWarning}</p>}
+        {extractNotice && (
+          <p className="text-sm text-amber-700 dark:text-amber-400" role="status">
+            {extractNotice}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 rounded-md p-4 border-2 border-brand-primary/40">
