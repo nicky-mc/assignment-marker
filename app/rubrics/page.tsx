@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import PageShell from "@/components/PageShell";
 import { HeroCard } from "@/components/HeroCard";
 import { AppCard } from "@/components/AppCard";
 import FlashMessage from "@/components/FlashMessage";
@@ -13,6 +15,8 @@ import { FILE_SOURCE_NOTE } from "@/lib/rubricNotes";
 import { listLibrary, type LibraryItem } from "@/lib/rubricStore";
 
 const ON_PURPLE_SECONDARY = "border-brand-secondary bg-transparent text-brand-secondary hover:bg-brand-secondary/15";
+
+export const metadata: Metadata = { title: "Rubric library" };
 
 export default async function RubricLibraryPage({ searchParams }: { searchParams: Promise<{ msg?: string; error?: string }> }) {
   const access = await requirePageAccess();
@@ -38,8 +42,7 @@ export default async function RubricLibraryPage({ searchParams }: { searchParams
   }
 
   return (
-    <div className="flex flex-col flex-1 items-center">
-      <main className="flex w-full max-w-3xl flex-col gap-4 px-6 pt-6 pb-16">
+    <PageShell width="wide">
         <FlashMessage msg={msg} error={error} />
         <HeroCard
           title="Rubric library"
@@ -63,7 +66,6 @@ export default async function RubricLibraryPage({ searchParams }: { searchParams
         ) : (
           <RubricLibrary items={items} admin={admin} canEdit={canEdit} emptyCourses={emptyCourses} />
         )}
-      </main>
-    </div>
+    </PageShell>
   );
 }

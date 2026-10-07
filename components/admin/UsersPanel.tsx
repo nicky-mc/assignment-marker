@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import Alert from "@/components/Alert";
 import { AppCard } from "@/components/AppCard";
 import {
   AlertDialog,
@@ -59,12 +60,25 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const lastTrigger = useRef<HTMLElement | null>(null);
 
   const outsideDomain = Boolean(allowedDomain && email.includes("@") && email.trim().toLowerCase().split("@").pop() !== allowedDomain.toLowerCase());
 
   function add(e: React.FormEvent) {
     e.preventDefault();
     setAddError(null);
+    const value = email.trim();
+    const problem = !value
+      ? "Enter an email address."
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+        ? "Enter a valid email address, for example name@techeducators.co.uk."
+        : null;
+    if (problem) {
+      setAddError(problem);
+      emailRef.current?.focus();
+      return;
+    }
     startTransition(async () => {
       const r = await addPersonAction(email, role);
       if (r.ok) {
@@ -105,7 +119,9 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
             </label>
             <Input
               id="person-email"
+              ref={emailRef}
               type="email"
+              placeholder="name@techeducators.co.uk"
               autoComplete="off"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -123,9 +139,9 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
             </NativeSelect>
           </div>
           {outsideDomain && (
-            <p id="domain-warning" role="status" className="rounded-[10px] border-2 border-amber-700 bg-amber-100 px-3 py-2 text-sm text-amber-950">
-              This address is outside {allowedDomain}. You can still add it, but please check it is right.
-            </p>
+            <Alert variant="warning" title="Address outside your domain">
+              <span id="domain-warning">This address is outside {allowedDomain}. You can still add it, but please check it is right.</span>
+            </Alert>
           )}
           {addError && (
             <p id="add-error" role="alert" className="text-sm font-semibold text-danger">
@@ -133,7 +149,7 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
             </p>
           )}
           <div>
-            <Button type="submit" disabled={pending || !email.trim()}>
+            <Button type="submit" disabled={pending}>
               {pending && !confirm ? "Adding..." : "Add person"}
             </Button>
           </div>
@@ -142,9 +158,9 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
 
       <AppCard title="People with access">
         {actionError && (
-          <p role="alert" className="rounded-[10px] border-2 border-danger px-3 py-2 text-sm font-semibold text-danger">
+          <Alert variant="error" title="That did not work">
             {actionError}
-          </p>
+          </Alert>
         )}
         {people.length === 0 ? (
           <p>No one has been added yet.</p>
@@ -168,17 +184,17 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
                   </div>
                   <RolePill role={p.role} />
                   <DropdownMenu>
-                    <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "icon" }))} aria-label={`Actions for ${p.email}`}>
+                    <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "icon" }))} aria-label={`Actions for ${p.email}`} onClick={(e) => (lastTrigger.current = e.currentTarget)}>
                       <MoreHorizontal aria-hidden="true" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-auto min-w-52 border-2 border-border p-2">
-                      <DropdownMenuItem className="min-h-10 px-2 text-base" onClick={() => setConfirm({ type: p.role === "admin" ? "marker" : "admin", email: p.email })}>
+                      <DropdownMenuItem disabled={you} className="min-h-10 px-2 text-base" onClick={() => setConfirm({ type: p.role === "admin" ? "marker" : "admin", email: p.email })}>
                         {p.role === "admin" ? "Make marker" : "Make admin"}
                       </DropdownMenuItem>
                       <DropdownMenuItem variant="destructive" disabled={you} className="min-h-10 px-2 text-base" onClick={() => setConfirm({ type: "remove", email: p.email })}>
                         Remove access
                       </DropdownMenuItem>
-                      {you && <p className="px-2 pb-1 text-[13px] text-ink-2">You cannot remove your own access.</p>}
+                      {you && <p className="max-w-52 px-2 pb-1 text-[13px] text-ink-2">You can&apos;t change your own access.</p>}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </li>
@@ -189,7 +205,7 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
       </AppCard>
 
       <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent finalFocus={lastTrigger}>
           {confirm && (
             <>
               <AlertDialogHeader>

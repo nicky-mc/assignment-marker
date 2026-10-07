@@ -1,10 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
+import { Check, ChevronDown, ClipboardCheck, ClipboardCopy, Quote, RotateCcw, SearchX, X } from "lucide-react";
+import AutoTextarea from "./admin/AutoTextarea";
 import { AppCard } from "./AppCard";
 import { SummaryBadge, SummaryCard } from "./SummaryCard";
 import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
+import { cn } from "@/lib/utils";
 
 export interface Evidence {
   type: "quote" | "absence";
@@ -36,76 +38,130 @@ export interface MarkOutcome {
 
 const READABLE = "max-w-[70ch] break-words";
 
-function ToggleButton({
-  expanded,
-  controls,
-  onClick,
-  children,
-}: {
-  expanded: boolean;
-  controls?: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+const PLACEHOLDER_RE = /(\[(?:NAME|EMAIL|PHONE|LINK|ID|ADDRESS|POSTCODE|BUSINESS|REDACTED)\]|\n*\[next cell\]\n*| \| )/;
+
+// Display only: placeholders become small muted chips, and table separators and "[next cell]" become muted markers.
+// The stored text is never changed.
+function QuoteText({ text }: { text: string }) {
   return (
-    <Button type="button" variant="outline" size="sm" aria-expanded={expanded} aria-controls={controls} onClick={onClick}>
-      {children}
-    </Button>
+    <>
+      {text.split(PLACEHOLDER_RE).map((part, i) => {
+        const ph = /^\[([A-Z]+)\]$/.exec(part);
+        if (ph) {
+          return (
+            <span key={i} className="mx-0.5 inline-block rounded border border-surface-border bg-muted px-1 align-baseline text-[12px] leading-5 font-medium text-ink-2">
+              <span className="sr-only">[</span>
+              {ph[1]}
+              <span className="sr-only">]</span>
+            </span>
+          );
+        }
+        if (part === " | ") {
+          return (
+            <span key={i} aria-hidden="true" className="mx-1 text-ink-2 select-none">
+              |
+            </span>
+          );
+        }
+        if (/^\n*\[next cell\]\n*$/.test(part)) {
+          return (
+            <span key={i} aria-hidden="true" className="mx-1 text-[12px] text-ink-2 italic select-none">
+              next cell
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </>
   );
 }
 
 function QuoteBlock({ evidence, id }: { evidence: Evidence; id: string }) {
   if (evidence.type === "absence") {
     return (
-      <p
-        id={id}
-        className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 text-sm ${READABLE}`}
-      >
+      <p id={id} className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 text-sm ${READABLE}`}>
         Not found in the submission: {evidence.text}
       </p>
     );
   }
   return (
-    <blockquote
-      id={id}
-      className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 ${READABLE}`}
-    >
+    <blockquote id={id} className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 ${READABLE}`}>
       <span className="block text-sm font-semibold">Quote</span>
-      <span className="block text-sm">&ldquo;{evidence.text}&rdquo;</span>
+      <span className="block text-sm whitespace-pre-line">
+        &ldquo;<QuoteText text={evidence.text} />&rdquo;
+      </span>
     </blockquote>
   );
 }
 
-// One evidence item: a short heading line, an optional plain note, and a closed-by-default evidence toggle.
-function EvidenceItem({
-  id,
-  title,
+// A compact row. With a quote, the whole row is the toggle (aria-expanded). Without one it is a plain row.
+function EvidenceRow({
+  panelId,
+  icon,
+  status,
+  text,
   note,
-  evidence,
-  shown,
+  toggleLabel,
+  expanded,
   onToggle,
+  children,
 }: {
-  id: string;
-  title: string;
+  panelId: string;
+  icon: React.ReactNode;
+  status: string;
+  text?: React.ReactNode;
   note?: string;
-  evidence: Evidence;
-  shown: boolean;
-  onToggle: () => void;
+  toggleLabel?: string;
+  expanded?: boolean;
+  onToggle?: () => void;
+  children?: React.ReactNode;
 }) {
-  const panelId = `${id}-panel`;
+  const content = (
+    <>
+      <span aria-hidden="true" className="mt-0.5 shrink-0">
+        {icon}
+      </span>
+      <span className={`min-w-0 flex-1 ${READABLE}`}>
+        <span className="font-semibold">{status}</span>
+        {text ? <span>{": "}{text}</span> : null}
+        {note ? <span className="block text-sm text-ink-2">{note}</span> : null}
+      </span>
+    </>
+  );
   return (
-    <li className="flex flex-col gap-2">
-      <p className={READABLE}>
-        <span className="font-semibold">{title}</span>
-        {note ? <span className="block text-sm">{note}</span> : null}
-      </p>
-      <div>
-        <ToggleButton expanded={shown} controls={panelId} onClick={onToggle} >
-          {shown ? "Hide evidence" : "Show evidence"}
-        </ToggleButton>
-      </div>
-      {shown && <QuoteBlock evidence={evidence} id={panelId} />}
+    <li className="rounded-[10px] border-2 border-surface-border">
+      {onToggle ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={panelId}
+          onClick={onToggle}
+          className="flex min-h-11 w-full items-start gap-3 rounded-[8px] px-3 py-2 text-left hover:bg-hover"
+        >
+          {content}
+          <span className="mt-0.5 flex shrink-0 items-center gap-1 text-sm font-medium text-ink-2">
+            {toggleLabel}
+            <ChevronDown aria-hidden="true" className={cn("size-4 transition-transform duration-150 motion-reduce:transition-none", expanded && "rotate-180")} />
+          </span>
+        </button>
+      ) : (
+        <div className="flex min-h-11 items-start gap-3 px-3 py-2">{content}</div>
+      )}
+      {expanded && children && <div className="px-3 pb-3">{children}</div>}
     </li>
+  );
+}
+
+function ExpandCollapse({ onExpand, onCollapse }: { onExpand: () => void; onCollapse: () => void }) {
+  return (
+    <div className="flex gap-1">
+      <Button type="button" variant="ghost" size="sm" onClick={onExpand}>
+        Expand all
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onCollapse}>
+        Collapse all
+      </Button>
+    </div>
   );
 }
 
@@ -113,12 +169,15 @@ export default function ResultCard({
   result,
   editableFeedback,
   onFeedbackChange,
+  aiDraft,
   onCopy,
   copied,
 }: {
   result: MarkOutcome;
   editableFeedback: string;
   onFeedbackChange: (value: string) => void;
+  /** The text the AI produced, for "Reset to AI draft". */
+  aiDraft: string;
   onCopy: () => void;
   copied: boolean;
 }) {
@@ -131,14 +190,19 @@ export default function ResultCard({
     notes?.nextStepNotes && notes.nextStepNotes.length === result.feedback.nextSteps.length ? notes.nextStepNotes : null;
   const presence = result.presenceEvidence ?? [];
 
-  const evidenceKeys = [
-    ...(notes?.explanationEvidence ? ["explanation"] : []),
-    ...(stepNotes ? stepNotes.map((_, i) => `step-${i}`) : []),
-    ...presence.map((p, i) => (p.met && p.quote ? `presence-${i}` : null)).filter((k): k is string => k !== null),
-  ];
-  const allShown = evidenceKeys.length > 0 && evidenceKeys.every((k) => open[k]);
+  const presenceKeys = presence.map((p, i) => (p.met && p.quote ? `presence-${i}` : null)).filter((k): k is string => k !== null);
+  const evidenceKeys = [...(notes?.explanationEvidence ? ["explanation"] : []), ...(stepNotes ? stepNotes.map((_, i) => `step-${i}`) : [])];
   const toggle = (k: string) => setOpen((prev) => ({ ...prev, [k]: !prev[k] }));
-  const toggleAll = () => setOpen(Object.fromEntries(evidenceKeys.map((k) => [k, !allShown])));
+  const setMany = (keys: string[], value: boolean) => setOpen((prev) => ({ ...prev, ...Object.fromEntries(keys.map((k) => [k, value])) }));
+
+  const evidenceIcon = (e: Evidence) =>
+    e.type === "absence" ? <SearchX className="size-5" /> : <Quote className="size-5" />;
+  const evidenceStatus = (e: Evidence) => (e.type === "absence" ? "Not found" : "Quote found");
+
+  function resetToDraft() {
+    if (editableFeedback !== aiDraft && !window.confirm("Replace your edits with the AI draft?")) return;
+    onFeedbackChange(aiDraft);
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -180,38 +244,33 @@ export default function ResultCard({
 
           {presence.length > 0 && (
             <div className="flex flex-col gap-2">
-              <h3 className="font-heading text-lg font-semibold">Presence checks</h3>
-              <ul className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-heading text-lg font-semibold">Presence checks</h3>
+                {presenceKeys.length > 0 && <ExpandCollapse onExpand={() => setMany(presenceKeys, true)} onCollapse={() => setMany(presenceKeys, false)} />}
+              </div>
+              <ul className="flex flex-col gap-2">
                 {presence.map((p, i) => {
                   const key = `presence-${i}`;
                   const hasQuote = p.met && !!p.quote;
+                  const panelId = `${uid}-${key}-panel`;
                   return (
-                    <li key={key} className="flex flex-col gap-2">
-                      <p className={READABLE}>
-                        <span className="font-semibold">
-                          <span aria-hidden="true">{p.met ? "✓ " : "✗ "}</span>
-                          {p.met ? "Found" : "Not found"}
-                        </span>
-                        {": "}
-                        {p.criterion}
-                        <span className="text-sm"> ({p.level === "required" ? "required" : "stretch goal"})</span>
-                      </p>
-                      {hasQuote && (
+                    <EvidenceRow
+                      key={key}
+                      panelId={panelId}
+                      icon={p.met ? <Check className="size-5" /> : <X className="size-5" />}
+                      status={p.met ? "Found" : "Not found"}
+                      text={
                         <>
-                          <div>
-                            <ToggleButton
-                              expanded={!!open[key]}
-                              controls={`${uid}-${key}-panel`}
-                              onClick={() => toggle(key)}
-                              
-                            >
-                              {open[key] ? "Hide evidence" : "Show evidence"}
-                            </ToggleButton>
-                          </div>
-                          {open[key] && <QuoteBlock evidence={{ type: "quote", text: p.quote! }} id={`${uid}-${key}-panel`} />}
+                          {p.criterion}
+                          <span className="text-sm text-ink-2"> ({p.level === "required" ? "required" : "stretch goal"})</span>
                         </>
-                      )}
-                    </li>
+                      }
+                      toggleLabel={hasQuote ? "View quote" : undefined}
+                      expanded={!!open[key]}
+                      onToggle={hasQuote ? () => toggle(key) : undefined}
+                    >
+                      {hasQuote && <QuoteBlock evidence={{ type: "quote", text: p.quote! }} id={panelId} />}
+                    </EvidenceRow>
                   );
                 })}
               </ul>
@@ -219,33 +278,39 @@ export default function ResultCard({
           )}
 
           {evidenceKeys.length > 0 && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-heading text-lg font-semibold">Evidence for the feedback</h3>
-                <ToggleButton expanded={allShown} onClick={toggleAll} >
-                  {allShown ? "Hide all evidence" : "Show all evidence"}
-                </ToggleButton>
+                <ExpandCollapse onExpand={() => setMany(evidenceKeys, true)} onCollapse={() => setMany(evidenceKeys, false)} />
               </div>
-              <ul className="flex flex-col gap-4">
+              <ul className="flex flex-col gap-2">
                 {notes?.explanationEvidence && (
-                  <EvidenceItem
-                    id={`${uid}-explanation`}
-                    title="Explanation of the mark"
-                    evidence={notes.explanationEvidence}
-                    shown={!!open.explanation}
+                  <EvidenceRow
+                    panelId={`${uid}-explanation-panel`}
+                    icon={evidenceIcon(notes.explanationEvidence)}
+                    status={evidenceStatus(notes.explanationEvidence)}
+                    text="Explanation of the mark"
+                    toggleLabel={notes.explanationEvidence.type === "absence" ? "View note" : "View quote"}
+                    expanded={!!open.explanation}
                     onToggle={() => toggle("explanation")}
-                  />
+                  >
+                    <QuoteBlock evidence={notes.explanationEvidence} id={`${uid}-explanation-panel`} />
+                  </EvidenceRow>
                 )}
                 {stepNotes?.map((note, i) => (
-                  <EvidenceItem
+                  <EvidenceRow
                     key={i}
-                    id={`${uid}-step-${i}`}
-                    title={`Next step ${i + 1}: ${result.feedback.nextSteps[i]}`}
+                    panelId={`${uid}-step-${i}-panel`}
+                    icon={evidenceIcon(note.evidence)}
+                    status={evidenceStatus(note.evidence)}
+                    text={`Next step ${i + 1}: ${result.feedback.nextSteps[i]}`}
                     note={note.why}
-                    evidence={note.evidence}
-                    shown={!!open[`step-${i}`]}
+                    toggleLabel={note.evidence.type === "absence" ? "View note" : "View quote"}
+                    expanded={!!open[`step-${i}`]}
                     onToggle={() => toggle(`step-${i}`)}
-                  />
+                  >
+                    <QuoteBlock evidence={note.evidence} id={`${uid}-step-${i}-panel`} />
+                  </EvidenceRow>
                 ))}
               </ul>
             </div>
@@ -253,45 +318,40 @@ export default function ResultCard({
         </div>
       </AppCard>
 
-      {/* c. Draft feedback for the learner */}
-      <AppCard title="Draft feedback for the learner" className="text-base">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            <p className={READABLE}>{result.feedback.recognition}</p>
-            <p className={READABLE}>{result.feedback.explanation}</p>
-            <h3 className="font-heading text-lg font-semibold">Next steps</h3>
-            <ul className="list-disc pl-5 flex flex-col gap-2">
-              {result.feedback.nextSteps.map((step, i) => (
-                <li key={i} className={READABLE}>
-                  {step}
-                </li>
-              ))}
-            </ul>
-            <p className={READABLE}>{result.feedback.motivation}</p>
-          </div>
-
-          <div className="flex flex-col gap-2 border-t-2 border-surface-border/40 pt-4">
-            <label htmlFor="editable-feedback" className="font-heading text-lg font-semibold">
-              Feedback to send (editable)
-            </label>
-            <p className={`text-sm ${READABLE}`}>
-              This is a starting point, not the finished feedback. Before it goes to the learner: check every
-              claim above is actually true of their work, adjust the tone to how you would normally talk to them,
-              add anything specific to their submission that the AI could not have known, and cut anything
-              generic or repeated. Edit directly below, then copy the result to wherever you send feedback.
-            </p>
-            <Textarea
-              id="editable-feedback"
-              className="min-h-48 max-w-[70ch]"
-              value={editableFeedback}
-              onChange={(e) => onFeedbackChange(e.target.value)}
-            />
-            <div>
-              <Button type="button" variant="outline" size="sm" onClick={onCopy}>
-                {copied ? "Copied!" : "Copy"}
-              </Button>
-            </div>
-          </div>
+      {/* c. One editable surface: the AI draft, pre-filled */}
+      <AppCard title="Feedback to send" className="text-base" helper="Edit directly, then copy the result to wherever you send feedback.">
+        <div role="note" className="flex flex-col gap-2 rounded-[10px] border-2 border-surface-border bg-field px-4 py-3">
+          <p className="text-sm font-semibold">Before you send</p>
+          <ul className="flex flex-col gap-1 text-sm">
+            {["Check each claim is true of their work", "Make the tone sound like you", "Add anything specific the AI could not know"].map((t) => (
+              <li key={t} className="flex items-start gap-2">
+                <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <AutoTextarea
+          id="editable-feedback"
+          aria-label="Feedback to send"
+          value={editableFeedback}
+          onChange={onFeedbackChange}
+          minRows={8}
+          maxViewportHeight={0.7}
+          className="max-w-[70ch] resize-none"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" onClick={onCopy}>
+            {copied ? <ClipboardCheck aria-hidden="true" /> : <ClipboardCopy aria-hidden="true" />}
+            {copied ? "Copied" : "Copy feedback"}
+          </Button>
+          <Button type="button" variant="outline" onClick={resetToDraft} disabled={editableFeedback === aiDraft}>
+            <RotateCcw aria-hidden="true" />
+            Reset to AI draft
+          </Button>
+          <p role="status" aria-live="polite" className="sr-only">
+            {copied ? "Feedback copied to the clipboard" : ""}
+          </p>
         </div>
       </AppCard>
     </div>

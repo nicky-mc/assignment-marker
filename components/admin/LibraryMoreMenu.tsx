@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,10 +14,11 @@ const fmt = (iso: string) => new Date(iso).toLocaleString("en-GB", { dateStyle: 
 // Admin-only "More" menu in the library header: import, export, and the read-only deletion log.
 export default function LibraryMoreMenu({ triggerClassName, deletions }: { triggerClassName?: string; deletions: DeletionRow[] }) {
   const [logOpen, setLogOpen] = useState(false);
+  const triggerRef = useRef<HTMLElement | null>(null);
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), triggerClassName)}>
+        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), triggerClassName)} onClick={(e) => (triggerRef.current = e.currentTarget)}>
           <MoreHorizontal aria-hidden="true" />
           More
         </DropdownMenuTrigger>
@@ -36,7 +37,7 @@ export default function LibraryMoreMenu({ triggerClassName, deletions }: { trigg
       </DropdownMenu>
 
       <Sheet open={logOpen} onOpenChange={setLogOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+        <SheetContent finalFocus={triggerRef} className="w-full overflow-y-auto sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>Deletion log</SheetTitle>
             <SheetDescription>Rubrics and courses that were deleted, newest first. A full copy of each is kept.</SheetDescription>

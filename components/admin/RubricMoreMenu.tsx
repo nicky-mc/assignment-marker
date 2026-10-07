@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -37,6 +37,7 @@ export default function RubricMoreMenu({
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const triggerRef = useRef<HTMLElement | null>(null);
   const blocked = liveVersion !== null;
   const needsId = everLive;
   const canDelete = !needsId || typed.trim() === rubricId;
@@ -53,10 +54,17 @@ export default function RubricMoreMenu({
     });
   }
 
+  function copyId() {
+    navigator.clipboard.writeText(rubricId).then(
+      () => toast.success("Id copied"),
+      () => toast.error("Could not copy. Select the id and copy it yourself."),
+    );
+  }
+
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), triggerClassName)}>
+        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "sm" }), triggerClassName)} onClick={(e) => (triggerRef.current = e.currentTarget)}>
           <MoreHorizontal aria-hidden="true" />
           More
         </DropdownMenuTrigger>
@@ -78,7 +86,7 @@ export default function RubricMoreMenu({
       </DropdownMenu>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent finalFocus={triggerRef}>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this rubric permanently?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -86,9 +94,16 @@ export default function RubricMoreMenu({
             </AlertDialogDescription>
           </AlertDialogHeader>
           {needsId && (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
+              <p className="font-medium">Rubric id</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="min-w-0 break-all rounded-[8px] border-2 border-surface-border bg-field px-2 py-1 font-mono text-sm text-ink">{rubricId}</code>
+                <Button type="button" variant="outline" size="sm" onClick={copyId}>
+                  Copy id
+                </Button>
+              </div>
               <label htmlFor="confirm-rubric-id" className="font-medium">
-                Type the rubric id to confirm: <span className="break-all font-mono">{rubricId}</span>
+                Type the rubric id to confirm
               </label>
               <Input id="confirm-rubric-id" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
             </div>

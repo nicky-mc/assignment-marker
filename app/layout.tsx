@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Space_Grotesk, Lexend_Deca } from "next/font/google";
-import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/ThemeToggle";
-import HeaderMenu from "@/components/HeaderMenu";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -30,7 +27,7 @@ const lexendDeca = Lexend_Deca({
 });
 
 export const metadata: Metadata = {
-  title: "AssisTED",
+  title: { default: "AssisTED", template: "%s | AssisTED" },
   description: "Assistant to help grade learner submissions against Tech Educators Rubrics",
 };
 
@@ -49,13 +46,12 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
-        <header className="w-full max-w-3xl mx-auto pt-4 pb-0 pl-6 pr-6 sm:pl-12 flex items-center justify-between gap-2">
-          <Logo />
-          <div className="flex items-center gap-2">
-            <HeaderMenu />
-            <ThemeToggle />
-          </div>
-        </header>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-[10px] focus:bg-brand-primary focus:px-4 focus:py-2 focus:font-medium focus:text-brand-secondary"
+        >
+          Skip to main content
+        </a>
         {children}
         <Toaster />
       </body>

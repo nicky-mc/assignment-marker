@@ -31,6 +31,7 @@
   color-scheme: light;
   --draft-bg: #ffe8a3;
   --draft-ink: #5a3a00;
+  --danger-on-purple: #ffb4b4; /* danger text and borders on a purple card */
 
   /* Purple cards, the same in both modes */
   --purple-title: #2ad385;
@@ -122,6 +123,10 @@
 }
 
 @theme inline {
+  /* Two page widths. Narrow: marking page, sign-in and access pages. Wide: library, rubric detail, users. */
+  --container-narrow: 720px;
+  --container-wide: 1040px;
+
   --font-sans: var(--font-lexend-deca), Arial, Helvetica, sans-serif;
   --font-heading: var(--font-space-grotesk), var(--font-lexend-deca), sans-serif;
 
@@ -143,6 +148,7 @@
   --color-primary-edge: var(--primary-edge);
   --color-hover: var(--hover);
   --color-danger: var(--danger);
+  --color-danger-on-purple: var(--danger-on-purple);
   --color-draft: var(--draft-bg);
   --color-draft-ink: var(--draft-ink);
   --color-purple-title: var(--purple-title);

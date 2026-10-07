@@ -21,7 +21,7 @@ export function WarningPanel({ warnings, error }: { warnings: RubricWarning[]; e
   const phrases = Array.from(new Set(warnings.map((w) => `"${w.phrase}"`))).join(", ");
   const fields = Array.from(new Set(warnings.map((w) => w.field.replace("bandDescriptions.", "band ")))).join(", ");
   return (
-    <div className="flex flex-col gap-2 rounded-md border-2 border-amber-700 bg-amber-50 text-amber-950 px-3 py-3 max-w-[70ch]" role="status">
+    <div className="flex flex-col gap-2 rounded-md border-2 border-draft-ink bg-draft text-draft-ink px-3 py-3 max-w-[70ch]" role="status">
       <p className="font-semibold">Please read this before saving</p>
       <p className="text-base">
         This text contains wording that can look like an instruction to the AI ({phrases}), in: {fields}. Rubric

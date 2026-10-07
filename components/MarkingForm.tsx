@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { anonymise, suggestTerms, type RedactionCategory } from "@/lib/anonymise";
 import { extractTextFromFile } from "@/lib/extractText";
-import { Upload, X } from "lucide-react";
+import { Eye, EyeOff, Upload, X } from "lucide-react";
+import { toast } from "sonner";
+import Alert from "./Alert";
+import SegmentedControl from "./SegmentedControl";
 import ResultCard, { type MarkOutcome } from "./ResultCard";
 import { AppCard } from "./AppCard";
 import { Badge } from "./ui/badge";
@@ -67,8 +70,9 @@ function summariseCounts(counts: Record<RedactionCategory, number>): string {
 function HighlightedPreview({ text }: { text: string }) {
   return (
     <div
-      className="max-h-60 overflow-auto whitespace-pre-wrap rounded-[10px] border-2 border-field-border bg-field px-3 py-2 text-sm text-ink"
+      className="min-h-40 max-h-96 overflow-auto whitespace-pre-wrap rounded-[10px] border-2 border-field-border bg-field px-3 py-2 text-sm text-ink"
       role="region"
+      tabIndex={0}
       aria-label="Highlighted preview, read only"
     >
       {text.split(PLACEHOLDER_SPLIT_RE).map((part, i) => {
@@ -88,10 +92,14 @@ function HighlightedPreview({ text }: { text: string }) {
 
 // "Jane-Doe_Assignment 1.docx" -> ["Jane", "Doe"]: the part before the first underscore, split on hyphens and spaces.
 // Only these derived name parts are kept. The file name itself is never stored or sent anywhere.
-function namesFromFileName(fileName: string): string[] {
+// Tokens that contain digits or look like assignment wording (assignment, week, course names...) are not names and are skipped.
+const NOT_NAME_WORDS = ["assignment", "week", "ail", "dmai", "di", "f"];
+function namesFromFileName(fileName: string, courseNames: string[]): string[] {
+  const skip = new Set([...NOT_NAME_WORDS, ...courseNames.flatMap((c) => [c, ...c.split(/[^A-Za-z0-9]+/)]).map((w) => w.toLowerCase()).filter(Boolean)]);
   const base = fileName.replace(/\.[^.]+$/, "");
   const beforeUnderscore = base.split("_")[0];
-  return Array.from(new Set(beforeUnderscore.split(/[-\s]+/).filter(Boolean)));
+  const tokens = beforeUnderscore.split(/[-\s]+/).filter(Boolean).filter((t) => !/\d/.test(t) && !skip.has(t.toLowerCase()));
+  return Array.from(new Set(tokens));
 }
 
 export interface CourseOption {
@@ -136,15 +144,20 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   const [extractWarning, setExtractWarning] = useState<string | null>(null);
   const [extractNotice, setExtractNotice] = useState<string | null>(null);
   const [feedbackCopied, setFeedbackCopied] = useState(false);
+  const [previewView, setPreviewView] = useState<"highlighted" | "edit">("highlighted");
+  const [hideOriginal, setHideOriginal] = useState(false);
+  const [dismissed, setDismissed] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleCopyFeedback() {
     try {
       await navigator.clipboard.writeText(editableFeedback);
       setFeedbackCopied(true);
+      toast.success("Copied");
       setTimeout(() => setFeedbackCopied(false), 2000);
     } catch {
       // Clipboard API unavailable - marker can still select and copy manually.
+      toast.error("Could not copy. Select the text and copy it yourself.");
     }
   }
 
@@ -160,7 +173,8 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
     try {
       const { text, warning, notice } = await extractTextFromFile(file);
       handleSubmissionChange(text);
-      setNames(namesFromFileName(file.name));
+      setNames(namesFromFileName(file.name, courses.map((c) => c.name)));
+      setDismissed([]);
       setTerms([]);
       if (warning) setExtractWarning(warning);
       if (notice) setExtractNotice(notice);
@@ -176,6 +190,8 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
     markRequestId.current += 1;
     setMarking(false);
     setHasAnonymised(false);
+    setHideOriginal(false);
+    setPreviewView("highlighted");
     setConfirmedAnonymised(false);
     setAnonymisedText("");
     setRedactionCount(0);
@@ -231,9 +247,17 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
     resetPreview();
   }
 
+  const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
+
+  // Words in the assignment's own title and overview are not worth flagging, so they are left out of the suggestions.
+  const assignmentText = `${selectedRubric.week} ${selectedRubric.title} ${selectedRubric.overview} ${courses.find((c) => c.id === courseId)?.name ?? ""}`;
+  const assignmentWords = useMemo(() => new Set(assignmentText.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)), [assignmentText]);
   const suggestions = useMemo(
-    () => suggestTerms(rawSubmission, [...names, ...terms]),
-    [rawSubmission, names, terms],
+    () =>
+      suggestTerms(rawSubmission, [...names, ...terms]).filter(
+        (s) => !dismissed.includes(s.term) && !s.term.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).every((w) => assignmentWords.has(w)),
+      ),
+    [rawSubmission, names, terms, dismissed, assignmentWords],
   );
 
   const markLocked = !hasAnonymised || !confirmedAnonymised || !anonymisedText.trim();
@@ -243,6 +267,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
     // Collapse the step cards so the result is the focus. Remember how they were, to restore them if marking fails.
     openBeforeMark.current = openSteps;
     setAllSteps(false);
+    setHideOriginal(true); // the original text is hidden as soon as Mark is pressed
     const controller = new AbortController();
     abortRef.current = controller;
     setMarking(true);
@@ -279,8 +304,6 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   function handleCancelMark() {
     abortRef.current?.abort();
   }
-
-  const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
 
   // One-line summaries for collapsed cards. They never include the file name or any of the learner's text.
   const wordCount = rawSubmission.trim() ? rawSubmission.trim().split(/\s+/).length : 0;
@@ -360,10 +383,16 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
 
       <AppCard
         step={2}
-        title={<label htmlFor="submission">Learner submission</label>}
+        title={hideOriginal ? "Learner submission" : <label htmlFor="submission">Learner submission</label>}
         collapsible={{ open: openSteps.submission, onOpenChange: setStep("submission"), summary: summaries.submission, label: "Learner submission" }}
         action={
           <>
+            {hasAnonymised && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setHideOriginal((h) => !h)}>
+                {hideOriginal ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
+                {hideOriginal ? "Show original" : "Hide original"}
+              </Button>
+            )}
             <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={extracting}>
               <Upload aria-hidden="true" />
               {extracting ? "Reading file…" : "Upload a file"}
@@ -380,23 +409,39 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
         }
         helper="Accepts .txt, .md, .docx or .pdf, or just paste text directly, e.g. from Google Docs."
       >
-        <Textarea
-          id="submission"
-          className="min-h-40"
-          placeholder="Paste the learner's submission here..."
-          value={rawSubmission}
-          onChange={(e) => handleSubmissionChange(e.target.value)}
-        />
-        {extractError && (
-          <p className="text-sm font-medium text-danger" role="alert">
-            {extractError}
-          </p>
+        {hideOriginal ? (
+          <div className="flex min-h-40 flex-col items-start justify-center gap-3 rounded-[10px] border-2 border-dashed border-field-border bg-field px-4 py-6">
+            <p className="flex items-center gap-2 font-medium">
+              <EyeOff aria-hidden="true" className="size-5" />
+              Original text hidden
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={() => setHideOriginal(false)}>
+              Show
+            </Button>
+          </div>
+        ) : (
+          <Textarea
+            id="submission"
+            className="min-h-40"
+            placeholder="Paste the learner's submission here..."
+            value={rawSubmission}
+            onChange={(e) => handleSubmissionChange(e.target.value)}
+          />
         )}
-        {extractWarning && <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{extractWarning}</p>}
+        {extractError && (
+          <Alert variant="error" title="Could not read that file">
+            {extractError}
+          </Alert>
+        )}
+        {extractWarning && (
+          <Alert variant="warning" title="Check the extracted text">
+            {extractWarning}
+          </Alert>
+        )}
         {extractNotice && (
-          <p className="text-sm font-medium text-amber-700 dark:text-amber-400" role="status">
+          <Alert variant="warning" title="Tables were read approximately">
             {extractNotice}
-          </p>
+          </Alert>
         )}
       </AppCard>
 
@@ -416,8 +461,8 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
                 <button
                   type="button"
                   onClick={() => removeName(n)}
-                  aria-label={`Remove name ${n}`}
-                  className="rounded-full p-0.5 hover:bg-brand-secondary hover:text-brand-primary"
+                  aria-label={`Remove ${n}`}
+                  className="flex size-6 items-center justify-center rounded-full hover:bg-brand-secondary hover:text-brand-primary"
                 >
                   <X aria-hidden="true" />
                 </button>
@@ -441,9 +486,9 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
             />
           </div>
           {names.length === 0 && (
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-400" role="status">
-              No names entered: names in the text will not be removed
-            </p>
+            <Alert variant="warning" title="No names entered">
+              Names in the text will not be removed.
+            </Alert>
           )}
         </div>
 
@@ -467,11 +512,20 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
                     <Button type="button" variant="outline" size="xs" onClick={() => addTerm(s.term)} aria-label={`Redact ${s.term}`}>
                       Redact
                     </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setDismissed((d) => [...d, s.term])}
+                      aria-label={`Dismiss ${s.term}`}
+                    >
+                      Dismiss
+                    </Button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm">No suggestions.</p>
+              <p className="text-sm">No suggestions</p>
             )}
             {terms.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -483,7 +537,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
                       type="button"
                       onClick={() => removeTerm(t)}
                       aria-label={`Stop redacting ${t}`}
-                      className="rounded-full p-0.5 hover:bg-brand-secondary hover:text-brand-primary"
+                      className="flex size-6 items-center justify-center rounded-full hover:bg-brand-secondary hover:text-brand-primary"
                     >
                       <X aria-hidden="true" />
                     </button>
@@ -512,24 +566,38 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
               Identifying details removed where found. Please read the preview: context can still identify
               someone.
             </p>
-            <HighlightedPreview text={anonymisedText} />
-            <label htmlFor="anonymised" className="text-sm font-medium">
-              Edit the text below if anything else needs removing (this is what will be sent for marking)
-            </label>
-            <Textarea
-              id="anonymised"
-              className="min-h-40 text-sm"
-              value={anonymisedText}
-              onChange={(e) => {
-                setAnonymisedText(e.target.value);
-                setConfirmedAnonymised(false);
-                // Editing the preview makes any earlier result stale.
-                markRequestId.current += 1;
-                setMarking(false);
-                setResult(null);
-                setEditableFeedback("");
-              }}
+            <SegmentedControl
+              label="Preview view"
+              name="preview-view"
+              value={previewView}
+              onChange={setPreviewView}
+              options={[
+                { value: "highlighted", label: "Highlighted" },
+                { value: "edit", label: "Edit" },
+              ]}
             />
+            {previewView === "highlighted" ? (
+              <HighlightedPreview text={anonymisedText} />
+            ) : (
+              <>
+                <p className="text-[13px] text-ink-2">The text below is what will be sent for marking. Edit it if anything else needs removing.</p>
+                <Textarea
+                  id="anonymised"
+                  aria-label="Anonymised text, this is what is sent for marking"
+                  className="min-h-40 max-h-96 text-sm"
+                  value={anonymisedText}
+                  onChange={(e) => {
+                    setAnonymisedText(e.target.value);
+                    setConfirmedAnonymised(false);
+                    // Editing the preview makes any earlier result stale.
+                    markRequestId.current += 1;
+                    setMarking(false);
+                    setResult(null);
+                    setEditableFeedback("");
+                  }}
+                />
+              </>
+            )}
             <label className="flex w-fit items-center gap-2 rounded-[10px] border-2 border-surface-border px-3 py-2 text-sm">
               <input
                 type="checkbox"
@@ -554,17 +622,16 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
       </AppCard>
 
       {error && (
-        <p className="font-medium text-danger" role="alert">
+        <Alert variant="error" title="Marking did not complete">
           {error}
-        </p>
+        </Alert>
       )}
 
       {result && (
-        <p className="rounded-[10px] border-2 border-amber-700 bg-amber-100 px-4 py-3 text-sm text-amber-950">
-          The mark and feedback below are an AI-generated draft, not a finished result. Check the mark is
-          fair, check every claim in the feedback is accurate, and edit and personalise it before it goes
+        <Alert variant="warning" title="AI-generated draft, not a finished result">
+          Check the mark is fair, check every claim in the feedback is accurate, and edit and personalise it before it goes
           anywhere near the learner.
-        </p>
+        </Alert>
       )}
 
       {marking && (
@@ -590,6 +657,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
             result={result}
             editableFeedback={editableFeedback}
             onFeedbackChange={setEditableFeedback}
+            aiDraft={buildFeedbackText(result)}
             onCopy={handleCopyFeedback}
             copied={feedbackCopied}
           />

@@ -1,3 +1,4 @@
+import Alert from "@/components/Alert";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -9,16 +10,16 @@ export const SMALL_BUTTON = cn(buttonVariants({ variant: "outline", size: "sm" }
 export function Notice({ msg, error }: { msg?: string; error?: string }) {
   if (error) {
     return (
-      <p role="alert" className="max-w-[70ch] rounded-[10px] border-2 border-danger px-3 py-2 font-medium text-danger">
+      <Alert variant="error" title="That did not work" className="max-w-[70ch]">
         {error}
-      </p>
+      </Alert>
     );
   }
   if (msg) {
     return (
-      <p role="status" className="max-w-[70ch] rounded-[10px] border-2 border-surface-border px-3 py-2 font-medium">
+      <Alert variant="info" title="Done" className="max-w-[70ch]">
         {msg}
-      </p>
+      </Alert>
     );
   }
   return null;

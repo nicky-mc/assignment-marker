@@ -1,4 +1,6 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import PageShell from "@/components/PageShell";
 import { notFound } from "next/navigation";
 import { AppCard } from "@/components/AppCard";
 import FlashMessage from "@/components/FlashMessage";
@@ -12,6 +14,8 @@ import { getDetail } from "@/lib/rubricAdmin/store";
 import { stripBandPrefix } from "@/lib/rubricAdmin/validate";
 import { FILE_SOURCE_NOTE } from "@/lib/rubricNotes";
 import { getLibraryDetail, type LibraryDetail } from "@/lib/rubricStore";
+
+export const metadata: Metadata = { title: "Rubric details" };
 
 type Details = { label: string; value: string; breakAll?: boolean }[];
 
@@ -32,33 +36,19 @@ function DetailsCard({ rows }: { rows: Details }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col flex-1 items-center">
-      <main className="flex w-full max-w-5xl flex-col gap-4 px-6 pt-6 pb-16">{children}</main>
-    </div>
+    <PageShell width="wide">{children}</PageShell>
   );
 }
 
 function Breadcrumb({ courseId, courseName, week }: { courseId: string; courseName: string; week: string }) {
   return (
-    <nav aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-        <li>
-          <Link href="/rubrics" className="underline">
-            Rubric library
-          </Link>
-        </li>
-        <li aria-hidden="true">/</li>
-        <li>
-          <Link href={`/rubrics#course-${courseId}`} className="underline">
-            {courseName}
-          </Link>
-        </li>
-        <li aria-hidden="true">/</li>
-        <li aria-current="page" className="font-medium no-underline">
-          {week}
-        </li>
-      </ol>
-    </nav>
+    <Breadcrumbs
+      items={[
+        { label: "Rubric library", href: "/rubrics" },
+        { label: courseName, href: `/rubrics#course-${courseId}` },
+        { label: week },
+      ]}
+    />
   );
 }
 

@@ -1,9 +1,10 @@
+import PageShell from "@/components/PageShell";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="flex flex-col flex-1 items-center" aria-busy="true">
-      <main className="flex w-full max-w-3xl flex-col gap-4 px-6 pt-6 pb-16">
+    <PageShell width="wide">
+      <div aria-busy="true" className="flex flex-col gap-4">
         <Skeleton className="h-24 rounded-[14px]" />
         <Skeleton className="h-10 rounded-[10px]" />
         {[0, 1].map((row) => (
@@ -19,7 +20,7 @@ export default function Loading() {
         <span className="sr-only" role="status">
           Loading rubrics
         </span>
-      </main>
-    </div>
+      </div>
+    </PageShell>
   );
 }
