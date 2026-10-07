@@ -137,6 +137,7 @@ export default async function RubricDetailPage({
           draftVersion={draft?.version ?? null}
           shownStatus={working.status}
           shownVersion={working.version}
+          everLive={detail.versions.some((v) => v.status !== "draft") || detail.history.some((h) => h.action === "approved")}
           admin
           canEdit
           genericBands={generic.map(stripBandPrefix)}

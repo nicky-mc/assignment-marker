@@ -19,6 +19,8 @@ export default async function HeaderMenu() {
     { href: "/", label: "Mark" },
     { href: "/rubrics", label: "Rubric library" },
   ];
+  // Admins only, decided here on the server. Markers never see it, and with sign-in off there are no roles.
+  if (authOn && access.role === "admin") links.push({ href: "/admin/users", label: "Manage users" });
 
   return <AppMenu email={authOn ? access.email : null} role={authOn ? access.role : null} links={links} canSignOut={authOn} />;
 }

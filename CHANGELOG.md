@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Admin user management and deleting rubrics or empty courses
+
+- `/admin/users` (admins only): add people, make admin or marker, remove access, each behind a confirmation, with a history timeline. "Manage users" is in the menu for admins. Changes go through database functions that refuse to remove the last admin or your own access.
+- Admins can delete a rubric (only when no version is live; typing its id if it was ever live) or an empty course, with a full copy kept in an audit log and a Deletion log sheet. Direct deletes stay blocked.
+- Needs `supabase/migrations/003_admin_users_and_rubric_delete.sql`. Checked with `npm run build` (routes dynamic), `tsc` and lint; not yet run against Supabase or looked at in a browser.
+
 ## 2026-10-07: Rubric library admin (edit in place, create, approve, history)
 
 - Admins reading rubrics from the database can edit each block in place (with counters, instruction-wording warnings and an unsaved-changes guard), edit band descriptions, add assignments and courses, import and export, approve and retire through confirm dialogs, try a draft in a sheet, and see a history timeline. Markers see none of it.

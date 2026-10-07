@@ -7,6 +7,7 @@ import { Notice } from "@/components/admin/ui";
 import RubricLibrary from "@/components/RubricLibrary";
 import { authMode, rubricSource } from "@/lib/auth/config";
 import { requirePageAccess } from "@/lib/auth/pageAccess";
+import { listDeletions, type DeletionRow } from "@/lib/rubricAdmin/deleteStore";
 import { listCourseRows } from "@/lib/rubricAdmin/store";
 import { FILE_SOURCE_NOTE } from "@/lib/rubricNotes";
 import { listLibrary, type LibraryItem } from "@/lib/rubricStore";
@@ -23,10 +24,14 @@ export default async function RubricLibraryPage({ searchParams }: { searchParams
 
   let items: LibraryItem[] = [];
   let emptyCourses: { id: string; name: string }[] = [];
+  let deletions: DeletionRow[] = [];
   let failed = false;
   try {
     items = await listLibrary(admin ? "admin" : "marker");
-    if (canEdit) emptyCourses = await listCourseRows();
+    if (canEdit) {
+      emptyCourses = await listCourseRows();
+      deletions = await listDeletions().catch(() => []);
+    }
   } catch (err) {
     console.error(`[rubric library] ${err instanceof Error ? err.name : "unknown error"}`);
     failed = true;
@@ -43,7 +48,7 @@ export default async function RubricLibraryPage({ searchParams }: { searchParams
             canEdit ? (
               <>
                 <NewCourseDialog triggerClassName={ON_PURPLE_SECONDARY} />
-                <LibraryMoreMenu triggerClassName={ON_PURPLE_SECONDARY} />
+                <LibraryMoreMenu triggerClassName={ON_PURPLE_SECONDARY} deletions={deletions} />
               </>
             ) : undefined
           }
