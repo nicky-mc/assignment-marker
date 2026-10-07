@@ -4,6 +4,7 @@ import { Space_Grotesk, Lexend_Deca } from "next/font/google";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import HeaderMenu from "@/components/HeaderMenu";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const THEME_INIT_SCRIPT = `
@@ -56,6 +57,7 @@ export default function RootLayout({
           </div>
         </header>
         {children}
+        <Toaster />
       </body>
     </html>
   );

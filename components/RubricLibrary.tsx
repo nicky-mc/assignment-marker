@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Pencil, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { AppCard } from "./AppCard";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "./ui/button";
@@ -43,7 +44,31 @@ function RubricCard({ item, admin }: { item: LibraryItem; admin: boolean }) {
   );
 }
 
-function CourseRow({ courseId, name, items, all, admin }: { courseId: string; name: string; items: LibraryItem[]; all: LibraryItem[]; admin: boolean }) {
+// The last card in an admin's row: a dashed card that starts a new rubric in this course. It is a link (so Enter works),
+// and Space is added so it behaves like a button. A mouse drag never triggers it: useDragScroll cancels the click after a drag.
+function AddAssignmentCard({ courseId, courseName }: { courseId: string; courseName: string }) {
+  const router = useRouter();
+  const href = `/rubrics/new?course=${encodeURIComponent(courseId)}`;
+  return (
+    <Link
+      href={href}
+      role="button"
+      onKeyDown={(e) => {
+        if (e.key === " ") {
+          e.preventDefault();
+          router.push(href);
+        }
+      }}
+      className="flex h-full min-h-44 flex-col items-center justify-center gap-2 rounded-[14px] border-2 border-dashed border-surface-border bg-transparent p-4 text-center transition-all duration-150 hover:-translate-y-0.5 hover:bg-muted motion-reduce:hover:translate-y-0"
+    >
+      <Plus className="size-6" aria-hidden="true" />
+      <span className="font-heading font-semibold">Add assignment</span>
+      <span className="text-[13px] text-ink-2">to {courseName}</span>
+    </Link>
+  );
+}
+
+function CourseRow({ courseId, name, items, all, admin, canEdit }: { courseId: string; name: string; items: LibraryItem[]; all: LibraryItem[]; admin: boolean; canEdit: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -143,13 +168,30 @@ function CourseRow({ courseId, name, items, all, admin }: { courseId: string; na
               <RubricCard item={item} admin={admin} />
             </li>
           ))}
+          {canEdit && (
+            <li className="w-64 shrink-0 snap-start sm:w-72">
+              <AddAssignmentCard courseId={courseId} courseName={name} />
+            </li>
+          )}
         </ul>
       </div>
     </section>
   );
 }
 
-export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; admin: boolean }) {
+export default function RubricLibrary({
+  items,
+  admin,
+  canEdit = false,
+  emptyCourses = [],
+}: {
+  items: LibraryItem[];
+  admin: boolean;
+  /** Admins reading from the database: shows the Add assignment card. */
+  canEdit?: boolean;
+  /** Courses with no rubrics yet, so an admin can add the first one. */
+  emptyCourses?: { id: string; name: string }[];
+}) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -160,8 +202,9 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
       c.all.push(i);
       map.set(i.courseId, c);
     }
+    if (canEdit) for (const c of emptyCourses) if (!map.has(c.id)) map.set(c.id, { name: c.name, all: [] });
     return Array.from(map, ([id, c]) => ({ id, ...c }));
-  }, [items]);
+  }, [items, canEdit, emptyCourses]);
 
   const q = query.trim().toLowerCase();
   const matches = (i: LibraryItem) => {
@@ -172,7 +215,11 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
     return i.status === "retired";
   };
 
-  const rows = courses.map((c) => ({ ...c, shown: c.all.filter(matches) })).filter((c) => c.shown.length > 0);
+  // Courses with no rubrics yet stay visible (only when nothing is being searched or filtered) so an admin can add the first one.
+  const filtering = Boolean(q) || (admin && filter !== "all");
+  const rows = courses
+    .map((c) => ({ ...c, shown: c.all.filter(matches) }))
+    .filter((c) => c.shown.length > 0 || (canEdit && c.all.length === 0 && !filtering));
 
   return (
     <div className="flex flex-col gap-4">
@@ -210,7 +257,7 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
         )}
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && !(canEdit && emptyCourses.length > 0) ? (
         <AppCard title="No rubrics yet">
           <p>{admin ? "No rubrics have been added yet." : "There are no live rubrics yet. Please ask an admin."}</p>
         </AppCard>
@@ -235,7 +282,7 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
           </div>
         </AppCard>
       ) : (
-        rows.map((c) => <CourseRow key={c.id} courseId={c.id} name={c.name} items={c.shown} all={c.all} admin={admin} />)
+        rows.map((c) => <CourseRow key={c.id} courseId={c.id} name={c.name} items={c.shown} all={c.all} admin={admin} canEdit={canEdit} />)
       )}
     </div>
   );

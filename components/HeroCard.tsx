@@ -7,6 +7,7 @@ export function HeroCard({
   eyebrow,
   aside,
   note,
+  actions,
   children,
   className,
 }: {
@@ -18,6 +19,8 @@ export function HeroCard({
   aside?: React.ReactNode;
   /** A quiet helper line at the bottom of the card. */
   note?: React.ReactNode;
+  /** A row of buttons under the text. */
+  actions?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
 }) {
@@ -35,6 +38,7 @@ export function HeroCard({
       </div>
       {children && <p className="text-purple-body">{children}</p>}
       {note && <p className="text-[13px] text-purple-body">{note}</p>}
+      {actions && <div className="mt-1 flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
