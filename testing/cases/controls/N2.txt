@@ -1,0 +1,9 @@
+Draft 1 (written by me before I used any AI):
+
+"Welcome to the team, Priya. Your desk is by the window on the second floor, next to Marcus, who will show you the ropes this week. Your laptop and login details are in the envelope on the chair. Please join the 10am stand-up in the blue room tomorrow, and don't worry about knowing everything yet. We all asked a lot of questions in our first month. Come and find me if anything is unclear."
+
+Draft 2 (the LLM's version, from the prompt "Write a warm welcome message to a new starter called Priya, about 80 words, mentioning her desk, laptop and the morning stand-up"):
+
+"Welcome aboard, Priya! We are thrilled to have you join our team. Your desk is located on the second floor by the window, and your laptop and login credentials are waiting for you. Tomorrow at 10am, please join our stand-up in the blue room to meet everyone. Do not hesitate to ask questions; we are all here to support you as you settle in."
+
+Evaluation of Draft 1 against Draft 2: Draft 2 is more upbeat and tidier, but it feels generic, and "thrilled" and "credentials" are not words anyone here would use. Draft 1 is warmer in a plain way, because it names Marcus and tells her not to worry. Draft 2 reads like AI to me, mostly because of the exclamation mark and the "do not hesitate" line. Draft 1 reads like a real colleague wrote it.

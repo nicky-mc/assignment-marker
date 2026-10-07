@@ -1,0 +1,7 @@
+What I wrote (my own words, no AI): "Tuesday's stock count was off by forty units. I rechecked bay 3, found a mislabelled pallet, and fixed the record before lunch."
+
+The prompt I gave the LLM: "Write a short first-person note about a stock count that was off by forty units and how I fixed it."
+
+The LLM's version: "During Tuesday's stock count we identified a discrepancy of forty units. After a thorough review of bay 3, I located a mislabelled pallet and promptly corrected the inventory record, ensuring accuracy before the end of the morning."
+
+My evaluation: "The LLM version sounds more polished and a bit more formal, with phrases like "promptly corrected" and "ensuring accuracy" that I would never say out loud. Mine is blunter but easier to follow because it just says what happened. I think mine reads as more obviously human, and the AI version reads like a line from a report. Neither is hard to read, but mine is more engaging for a quick update."
