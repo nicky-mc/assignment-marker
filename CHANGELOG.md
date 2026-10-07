@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Design system (presentation only)
+
+- shadcn/ui (Base UI, Tailwind v4) with softer light and dark tokens in `app/globals.css`, no pure white anywhere, fields dark in dark mode, and shared `AppCard`, `HeroCard` and `SummaryCard`. The marking page is now four step cards plus a summary card and marker and learner cards.
+- The header email pill is replaced by a button-activated Menu (`HeaderMenu` and `AppMenu`): email and role, Mark, Rubric library (admins), Sign out. Behaviour of the marking page is unchanged.
+- Checks: `npm run build` (routes still dynamic), anonymiser script 38 of 38, `tsc` and lint. Not yet looked at in a browser.
+
 ## 2026-10-07: Run access checks per request
 
 - `requirePageAccess`, `requireAdmin` and the `/login` and `/no-access` pages now await `connection()`, so seven routes that were prerendered at build time (baking in the build-time `AUTH_MODE`) are dynamic. No change to what the checks decide.

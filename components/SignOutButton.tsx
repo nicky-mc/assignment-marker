@@ -1,9 +1,11 @@
+import { Button } from "@/components/ui/button";
+
 export default function SignOutButton() {
   return (
     <form action="/auth/signout" method="post">
-      <button type="submit" className="text-sm rounded-md border border-brand-primary/40 px-3 py-1 font-medium">
+      <Button type="submit" variant="outline" size="sm">
         Sign out
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/auth/supabaseBrowser";
 
 export default function SignInButton() {
@@ -11,12 +12,8 @@ export default function SignInButton() {
     });
   }
   return (
-    <button
-      type="button"
-      onClick={signIn}
-      className="self-start rounded-md bg-brand-primary text-brand-secondary px-4 py-2 font-medium"
-    >
+    <Button type="button" onClick={signIn} className="self-start">
       Sign in with Google
-    </button>
+    </Button>
   );
 }

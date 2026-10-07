@@ -2,10 +2,7 @@
 
 import { useId } from "react";
 
-const INPUT =
-  "w-full max-w-[70ch] border border-brand-primary/40 rounded-md px-3 py-2 text-base bg-white text-brand-primary " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary " +
-  "aria-[invalid=true]:border-red-700 aria-[invalid=true]:border-2 read-only:bg-gray-100 read-only:text-gray-700";
+const INPUT = "field-control max-w-[70ch]";
 
 // A labelled field with an optional hint, a live character count against its limit, and an error that
 // is announced to screen readers. Used by every admin form.
@@ -76,12 +73,12 @@ export default function Field({
         <input {...common} type="text" placeholder={placeholder} onChange={(e) => onChange?.(e.target.value)} />
       )}
       {limit !== undefined && (
-        <p id={countId} className={`text-sm ${over ? "font-semibold text-red-700 dark:text-red-400" : ""}`}>
+        <p id={countId} className={`text-sm ${over ? "font-semibold text-danger" : ""}`}>
           {value.trim().length} of {limit} characters
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="text-sm font-semibold text-red-700 dark:text-red-400">
+        <p id={errorId} role="alert" className="text-sm font-semibold text-danger">
           {error}
         </p>
       )}

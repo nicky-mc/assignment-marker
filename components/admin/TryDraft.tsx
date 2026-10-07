@@ -49,7 +49,7 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
           rows={8}
           value={sample}
           onChange={(e) => setSample(e.target.value)}
-          className="w-full max-w-[70ch] border border-brand-primary/40 rounded-md px-3 py-2 text-base bg-white text-brand-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary"
+          className="field-control max-w-[70ch]"
         />
       </div>
       <div>
@@ -58,7 +58,7 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
         </button>
       </div>
       {error && (
-        <p role="alert" className="font-semibold text-red-700 dark:text-red-400">
+        <p role="alert" className="font-semibold text-danger">
           {error}
         </p>
       )}

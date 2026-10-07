@@ -1,6 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
+import { AppCard } from "./AppCard";
+import { SummaryBadge, SummaryCard } from "./SummaryCard";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 
 export interface Evidence {
   type: "quote" | "absence";
@@ -30,47 +34,23 @@ export interface MarkOutcome {
   };
 }
 
-// Focus ring: visible on the neutral reading surface in both modes.
-const FOCUS_ON_SURFACE =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary";
-
-const SURFACE =
-  "rounded-lg border-2 border-brand-primary dark:border-brand-secondary/50 overflow-hidden bg-white dark:bg-brand-primary-tint text-foreground";
-const SECTION_HEADER = "font-heading text-xl font-semibold bg-brand-primary text-brand-secondary px-4 py-3";
 const READABLE = "max-w-[70ch] break-words";
-
-function Badge({ glyph, children }: { glyph: string; children: React.ReactNode }) {
-  return (
-    <li className="inline-flex items-center gap-1.5 rounded-full bg-white text-brand-primary px-3 py-1 text-sm font-semibold">
-      <span aria-hidden="true">{glyph}</span>
-      {children}
-    </li>
-  );
-}
 
 function ToggleButton({
   expanded,
   controls,
   onClick,
   children,
-  className = "",
 }: {
   expanded: boolean;
   controls?: string;
   onClick: () => void;
   children: React.ReactNode;
-  className?: string;
 }) {
   return (
-    <button
-      type="button"
-      aria-expanded={expanded}
-      aria-controls={controls}
-      onClick={onClick}
-      className={`rounded-md border px-3 py-1.5 text-sm font-medium ${className}`}
-    >
+    <Button type="button" variant="outline" size="sm" aria-expanded={expanded} aria-controls={controls} onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -79,7 +59,7 @@ function QuoteBlock({ evidence, id }: { evidence: Evidence; id: string }) {
     return (
       <p
         id={id}
-        className={`border-l-4 border-brand-primary dark:border-brand-secondary bg-brand-primary-tint dark:bg-background rounded-r-md px-3 py-2 text-sm ${READABLE}`}
+        className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 text-sm ${READABLE}`}
       >
         Not found in the submission: {evidence.text}
       </p>
@@ -88,7 +68,7 @@ function QuoteBlock({ evidence, id }: { evidence: Evidence; id: string }) {
   return (
     <blockquote
       id={id}
-      className={`border-l-4 border-brand-primary dark:border-brand-secondary bg-brand-primary-tint dark:bg-background rounded-r-md px-3 py-2 ${READABLE}`}
+      className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 ${READABLE}`}
     >
       <span className="block text-sm font-semibold">Quote</span>
       <span className="block text-sm">&ldquo;{evidence.text}&rdquo;</span>
@@ -120,7 +100,7 @@ function EvidenceItem({
         {note ? <span className="block text-sm">{note}</span> : null}
       </p>
       <div>
-        <ToggleButton expanded={shown} controls={panelId} onClick={onToggle} className={`border-brand-primary/50 ${FOCUS_ON_SURFACE}`}>
+        <ToggleButton expanded={shown} controls={panelId} onClick={onToggle} >
           {shown ? "Hide evidence" : "Show evidence"}
         </ToggleButton>
       </div>
@@ -162,11 +142,8 @@ export default function ResultCard({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* a. Summary bar */}
-      <section aria-labelledby={`${uid}-summary`} className="rounded-lg bg-brand-primary text-brand-secondary p-4 flex flex-col gap-3">
-        <h2 id={`${uid}-summary`} className="sr-only">
-          Result summary
-        </h2>
+      {/* a. Summary card */}
+      <SummaryCard heading="Result summary">
         {result.topicMismatch ? (
           <p className={`text-base ${READABLE}`}>{result.mismatchReason}</p>
         ) : (
@@ -177,8 +154,8 @@ export default function ResultCard({
         )}
         {(result.capped || result.topicMismatch) && (
           <ul className="flex flex-wrap gap-2" aria-label="Flags">
-            {result.capped && <Badge glyph="▼">Capped</Badge>}
-            {result.topicMismatch && <Badge glyph="!">May not match the assignment</Badge>}
+            {result.capped && <SummaryBadge glyph="▼">Capped</SummaryBadge>}
+            {result.topicMismatch && <SummaryBadge glyph="!">May not match the assignment</SummaryBadge>}
           </ul>
         )}
         {result.capped && !result.topicMismatch && (
@@ -187,14 +164,11 @@ export default function ResultCard({
           </p>
         )}
         {result.rubric?.source === "database" && <p className="text-sm">Rubric v{result.rubric.version}, database</p>}
-      </section>
+      </SummaryCard>
 
       {/* b. For the marker */}
-      <section aria-labelledby={`${uid}-marker`} className={SURFACE}>
-        <h2 id={`${uid}-marker`} className={SECTION_HEADER}>
-          For the marker
-        </h2>
-        <div className="p-4 flex flex-col gap-5 text-base">
+      <AppCard title="For the marker" className="text-base">
+        <div className="flex flex-col gap-5">
           <p className={`text-sm ${READABLE}`}>Quotes are copied by the AI. Please check them against the submission.</p>
 
           {notes?.rationale && (
@@ -229,7 +203,7 @@ export default function ResultCard({
                               expanded={!!open[key]}
                               controls={`${uid}-${key}-panel`}
                               onClick={() => toggle(key)}
-                              className={`border-brand-primary/50 ${FOCUS_ON_SURFACE}`}
+                              
                             >
                               {open[key] ? "Hide evidence" : "Show evidence"}
                             </ToggleButton>
@@ -248,7 +222,7 @@ export default function ResultCard({
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-heading text-lg font-semibold">Evidence for the feedback</h3>
-                <ToggleButton expanded={allShown} onClick={toggleAll} className={`border-brand-primary/50 ${FOCUS_ON_SURFACE}`}>
+                <ToggleButton expanded={allShown} onClick={toggleAll} >
                   {allShown ? "Hide all evidence" : "Show all evidence"}
                 </ToggleButton>
               </div>
@@ -277,14 +251,11 @@ export default function ResultCard({
             </div>
           )}
         </div>
-      </section>
+      </AppCard>
 
       {/* c. Draft feedback for the learner */}
-      <section aria-labelledby={`${uid}-learner`} className={SURFACE}>
-        <h2 id={`${uid}-learner`} className={SECTION_HEADER}>
-          Draft feedback for the learner
-        </h2>
-        <div className="p-4 flex flex-col gap-4 text-base">
+      <AppCard title="Draft feedback for the learner" className="text-base">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3">
             <p className={READABLE}>{result.feedback.recognition}</p>
             <p className={READABLE}>{result.feedback.explanation}</p>
@@ -299,7 +270,7 @@ export default function ResultCard({
             <p className={READABLE}>{result.feedback.motivation}</p>
           </div>
 
-          <div className="flex flex-col gap-2 border-t-2 border-brand-primary/20 pt-4">
+          <div className="flex flex-col gap-2 border-t-2 border-surface-border/40 pt-4">
             <label htmlFor="editable-feedback" className="font-heading text-lg font-semibold">
               Feedback to send (editable)
             </label>
@@ -309,24 +280,20 @@ export default function ResultCard({
               add anything specific to their submission that the AI could not have known, and cut anything
               generic or repeated. Edit directly below, then copy the result to wherever you send feedback.
             </p>
-            <textarea
+            <Textarea
               id="editable-feedback"
-              className="w-full max-w-[70ch] border border-brand-primary/40 rounded-md px-3 py-2 min-h-48 text-base bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="min-h-48 max-w-[70ch]"
               value={editableFeedback}
               onChange={(e) => onFeedbackChange(e.target.value)}
             />
             <div>
-              <button
-                type="button"
-                onClick={onCopy}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium border-brand-primary/50 ${FOCUS_ON_SURFACE}`}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={onCopy}>
                 {copied ? "Copied!" : "Copy"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-      </section>
+      </AppCard>
     </div>
   );
 }

@@ -1,67 +1,269 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 /* Manual theme toggle: `dark:` utilities respond to [data-theme="dark"] on <html>
    (set by ThemeToggle / the inline init script), not just the OS preference. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* ---------- Design tokens ----------
+   Brand: purple #3F1046, green #2AD385. No pure white or pure black anywhere: every surface, field and
+   text colour is one of these tokens, and each text and background pair below meets contrast.
+   Light and dark values are set once, here. Components use the Tailwind names mapped under @theme. */
 :root {
-  /* Brand: main #3F1046 (deep purple), secondary #2AD385 (green). */
   --brand-primary: #3f1046;
-  --brand-primary-tint: #f2e9f5;
+  --brand-primary-tint: #ece3ef;
   --brand-secondary: #2ad385;
   --brand-secondary-tint: #e3faf0;
 
-  --background: #fafafa;
-  --foreground: var(--brand-primary);
+  --page: #f0ebf2;
+  --surface: #f7f3f8;
+  --surface-border: #3f1046;
+  --field: #fbf9fc;
+  --field-border: #3f1046;
+  --ink: #3f1046;
+  --ink-2: #5f4468;
+  --placeholder: #6f5a78;
+  --focus-ring: #3f1046;
+  --primary-edge: #3f1046; /* border on primary buttons */
+  --hover: #e6dcea;
+  --danger: #a3201a;
+
+  /* Purple cards, the same in both modes */
+  --purple-title: #2ad385;
+  --purple-body: #eadcf0;
+  --field-on-purple-border: #2ad385;
+  --chevron: #3f1046;
+
+  /* shadcn/ui tokens, mapped onto the tokens above */
+  --background: var(--page);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: #3f1046;
+  --primary-foreground: #2ad385;
+  --secondary: var(--field);
+  --secondary-foreground: var(--ink);
+  --muted: var(--hover);
+  --muted-foreground: var(--ink-2);
+  --accent: var(--hover);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--surface-border);
+  --input: var(--field-border);
+  --ring: var(--focus-ring);
+  --radius: 0.625rem;
+}
+
+/* Dark: the OS preference until the toggle (or a stored choice) sets data-theme explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --brand-primary-tint: #33173a;
+    --brand-secondary-tint: #10301f;
+    --page: #1c0a20;
+    --surface: #2b1230;
+    --surface-border: #8b5a97;
+    --field: #241029;
+    --field-border: #8b5a97;
+    --ink: #f3e9f5;
+    --ink-2: #cdb8d2;
+    --placeholder: #bfa9c6;
+    --focus-ring: #2ad385;
+    --primary-edge: #2ad385;
+    --hover: #3a1c41;
+    --danger: #ff9fa0;
+    --chevron: #cdb8d2;
+  }
+}
+
+/* Explicit choice always wins over the OS preference, in both directions. */
+:root[data-theme="dark"] {
+  --brand-primary-tint: #33173a;
+  --brand-secondary-tint: #10301f;
+  --page: #1c0a20;
+  --surface: #2b1230;
+  --surface-border: #8b5a97;
+  --field: #241029;
+  --field-border: #8b5a97;
+  --ink: #f3e9f5;
+  --ink-2: #cdb8d2;
+  --placeholder: #bfa9c6;
+  --focus-ring: #2ad385;
+  --primary-edge: #2ad385;
+  --hover: #3a1c41;
+  --danger: #ff9fa0;
+  --chevron: #cdb8d2;
+}
+
+:root[data-theme="light"] {
+  --brand-primary-tint: #ece3ef;
+  --brand-secondary-tint: #e3faf0;
+  --page: #f0ebf2;
+  --surface: #f7f3f8;
+  --surface-border: #3f1046;
+  --field: #fbf9fc;
+  --field-border: #3f1046;
+  --ink: #3f1046;
+  --ink-2: #5f4468;
+  --placeholder: #6f5a78;
+  --focus-ring: #3f1046;
+  --primary-edge: #3f1046;
+  --hover: #e6dcea;
+  --danger: #a3201a;
+  --chevron: #3f1046;
 }
 
 @theme inline {
+  --font-sans: var(--font-lexend-deca), Arial, Helvetica, sans-serif;
+  --font-heading: var(--font-space-grotesk), var(--font-lexend-deca), sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-tint: var(--brand-primary-tint);
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-secondary-tint: var(--brand-secondary-tint);
-  --font-sans: var(--font-lexend-deca);
-  --font-heading: var(--font-space-grotesk);
+
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-field: var(--field);
+  --color-field-border: var(--field-border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-placeholder: var(--placeholder);
+  --color-primary-edge: var(--primary-edge);
+  --color-hover: var(--hover);
+  --color-danger: var(--danger);
+  --color-purple-title: var(--purple-title);
+  --color-purple-body: var(--purple-body);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
-/* Falls back to the OS preference until the toggle (or a stored choice) sets data-theme explicitly. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1c0a22;
-    --foreground: #f5efe6;
-    --brand-primary-tint: #2b0e33;
-    --brand-secondary-tint: #10301f;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-sans);
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+  /* One visible focus ring everywhere: 3px, offset 2px. */
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary {
+    transition:
+      background-color 150ms,
+      border-color 150ms,
+      color 150ms,
+      opacity 150ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-/* Explicit choice always wins over the OS preference, in both directions. */
-:root[data-theme="dark"] {
-  --background: #1c0a22;
-  --foreground: #f5efe6;
-  --brand-primary-tint: #2b0e33;
-  --brand-secondary-tint: #10301f;
-}
+@layer components {
+  /* Every text field, text area and select: the field fill and border for the mode. On a purple card the
+     border is green and 1.5px (the card sets --field-border-w and --field-border). */
+  .field-control {
+    width: 100%;
+    background-color: var(--field);
+    color: var(--ink);
+    border: var(--field-border-w, 2px) solid var(--field-border-local, var(--field-border));
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .field-control::placeholder {
+    color: var(--placeholder);
+    opacity: 1;
+  }
+  .field-control[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+  .field-control:read-only {
+    opacity: 0.85;
+  }
+  select.field-control {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233F1046' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="dark"] select.field-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CDB8D2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) select.field-control {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CDB8D2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
+  }
 
-:root[data-theme="light"] {
-  --background: #fafafa;
-  --foreground: #3f1046;
-  --brand-primary-tint: #f2e9f5;
-  --brand-secondary-tint: #e3faf0;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading), var(--font-sans), sans-serif;
+  /* A purple card: green titles and labels, light purple body text, fields with a green 1.5px border. */
+  .purple-card {
+    --field-border-w: 1.5px;
+    --field-border-local: var(--field-on-purple-border);
+    background-color: var(--brand-primary);
+    color: var(--purple-body);
+    border: 2px solid var(--brand-primary);
+  }
+  :root[data-theme="dark"] .purple-card {
+    border-color: var(--surface-border);
+  }
+  .purple-card label,
+  .purple-card h2 {
+    color: var(--purple-title);
+  }
+  .purple-card .field-control {
+    color: var(--ink);
+  }
 }

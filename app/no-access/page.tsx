@@ -11,7 +11,7 @@ export default async function NoAccessPage() {
   return (
     <div className="flex flex-col flex-1 items-center">
       <main className="flex w-full max-w-3xl flex-col gap-6 pt-6 pb-16 px-6">
-        <div className="flex flex-col gap-4 rounded-lg p-6 bg-brand-secondary text-brand-primary border-4 border-brand-primary">
+        <div className="flex flex-col gap-4 rounded-[14px] border-2 border-surface-border bg-surface p-5 text-ink">
           <h1 className="text-2xl font-semibold">Ask an admin for access</h1>
           <p className="text-sm">
             {access.status === "not_allowed"

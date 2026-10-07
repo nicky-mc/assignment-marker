@@ -2,14 +2,14 @@
 
 import type { RubricWarning } from "@/lib/rubricAdmin/validate";
 
-export const PRIMARY_BUTTON =
-  "rounded-md bg-brand-primary text-brand-secondary px-4 py-2 font-medium disabled:opacity-40 " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary";
+import { buttonVariants } from "@/components/ui/button";
+
+export const PRIMARY_BUTTON = buttonVariants({ variant: "default" });
 
 export function FormMessage({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p role="alert" className="rounded-md border-2 border-red-700 px-3 py-2 text-base font-medium max-w-[70ch]">
+    <p role="alert" className="rounded-md border-2 border-danger px-3 py-2 text-base font-medium text-danger max-w-[70ch]">
       {message}
     </p>
   );
@@ -32,13 +32,13 @@ export function WarningPanel({ warnings, error }: { warnings: RubricWarning[]; e
           type="checkbox"
           name="acknowledged"
           value="yes"
-          className="mt-1 w-5 h-5 accent-brand-primary"
+          className="mt-1 w-5 h-5 accent-brand-primary dark:accent-brand-secondary"
           aria-describedby={error ? "ack-error" : undefined}
         />
         I have read this and it only describes the assignment
       </label>
       {error && (
-        <p id="ack-error" role="alert" className="text-sm font-semibold text-red-700">
+        <p id="ack-error" role="alert" className="text-sm font-semibold text-danger">
           {error}
         </p>
       )}

@@ -3,7 +3,7 @@ import Script from "next/script";
 import { Space_Grotesk, Lexend_Deca } from "next/font/google";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
-import UserMenu from "@/components/UserMenu";
+import HeaderMenu from "@/components/HeaderMenu";
 import "./globals.css";
 
 const THEME_INIT_SCRIPT = `
@@ -48,10 +48,10 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
-        <header className="w-full max-w-3xl mx-auto pt-4 pb-0 pl-12 pr-6 flex items-center justify-between">
+        <header className="w-full max-w-3xl mx-auto pt-4 pb-0 pl-6 pr-6 sm:pl-12 flex items-center justify-between gap-2">
           <Logo />
-          <div className="flex items-center gap-3">
-            <UserMenu />
+          <div className="flex items-center gap-2">
+            <HeaderMenu />
             <ThemeToggle />
           </div>
         </header>
