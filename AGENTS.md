@@ -20,6 +20,8 @@ How TED would swap each part:
 - **Rate limit:** `lib/auth/rateLimit.ts` is in memory and per server instance; swap for a shared store if there are several instances.
 - Supabase setup: `supabase/migrations/001_init.sql`; seed with `scripts/seed-rubrics.ts`, verify with `scripts/check-rubrics-db.ts`. The secret key is used only by those scripts, never by the running app.
 
+Staff self sign-up: `claim_marker_access()` (migration 004, called from `lib/auth/claimAccess.ts` by `getAccess()` and the auth callback) adds a verified Google user at an allowed domain as a marker only; settings and the block list are changed only through `set_signup_settings`, `remove_allowed_user`, `add_allowed_user` and `unblock_email`. Domain rules are shared in `lib/signupRules.ts`.
+
 # Rubric admin screens
 
 Admins manage rubrics at `/admin/rubrics` (create, edit, import and export JSON, approve, retire, try a draft). Code: `lib/rubricAdmin/` (`validate.ts` rules, `store.ts` database access as the signed-in admin, `actions.ts` server actions), `components/admin/`, `app/admin/rubrics/`. Rubric text goes into the marking prompt, so it is validated as untrusted input (plain text, limits, warnings on instruction-like phrases). Only `approved` rubrics are used for marking; drafts are tried only by admins through `/api/mark` with `draft: true`. History is append-only. Needs `supabase/migrations/002_rubric_admin.sql`. To swap for TED's own system, replace `lib/rubricAdmin/store.ts` and keep `lib/rubricAdmin/validate.ts`. Uses the experimental `authInterrupts` flag (`next.config.ts`) for a real 403 page.

@@ -18,7 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { addPersonAction, removePersonAction, setRoleAction } from "@/lib/userAdmin/actions";
+import { addPersonAction, removePersonAction, setRoleAction, unblockEmailAction } from "@/lib/userAdmin/actions";
 import { cn } from "@/lib/utils";
 
 interface Person {
@@ -26,6 +26,13 @@ interface Person {
   role: "admin" | "marker";
   added_by: string | null;
   created_at: string;
+  is_new: boolean;
+}
+
+interface Removed {
+  email: string;
+  blocked_by: string | null;
+  blocked_at: string;
 }
 
 type Confirm = { type: "admin" | "marker" | "remove"; email: string } | null;
@@ -50,10 +57,10 @@ function RolePill({ role }: { role: Person["role"] }) {
 const COPY: Record<NonNullable<Confirm>["type"], { title: (e: string) => string; body: string; button: string }> = {
   admin: { title: (e) => `Make ${e} an admin?`, body: "Admins can approve rubrics and manage users.", button: "Make admin" },
   marker: { title: (e) => `Make ${e} a marker?`, body: "They will no longer be able to edit rubrics or manage users.", button: "Make marker" },
-  remove: { title: (e) => `Remove access for ${e}?`, body: "They will no longer be able to sign in to the tool.", button: "Remove access" },
+  remove: { title: (e) => `Remove access for ${e}?`, body: "They will no longer be able to sign in to the tool. They will not be added again automatically unless you choose Allow again.", button: "Remove access" },
 };
 
-export default function UsersPanel({ people, me, allowedDomain }: { people: Person[]; me: string; allowedDomain: string | null }) {
+export default function UsersPanel({ people, removed, me, allowedDomain }: { people: Person[]; removed: Removed[]; me: string; allowedDomain: string | null }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("marker");
   const [addError, setAddError] = useState<string | null>(null);
@@ -177,9 +184,11 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
                     <p className="break-all font-medium">
                       {p.email}
                       {you && <span className="ml-2 rounded-full border-2 border-surface-border px-2 py-0.5 text-[12px] font-semibold">You</span>}
+                      {p.is_new && <span className="ml-2 rounded-full border-2 border-surface-border px-2 py-0.5 text-[12px] font-semibold">New</span>}
+                      {p.added_by === "self sign-up" && <span className="ml-2 rounded-full border-2 border-surface-border px-2 py-0.5 text-[12px] font-semibold">Self sign-up</span>}
                     </p>
                     <p className="text-[13px] text-ink-2">
-                      added by {p.added_by ?? "unknown"}, {fmt(p.created_at)}
+                      {p.added_by === "self sign-up" ? "joined by self sign-up" : `added by ${p.added_by ?? "unknown"}`}, {fmt(p.created_at)}
                     </p>
                   </div>
                   <RolePill role={p.role} />
@@ -200,6 +209,41 @@ export default function UsersPanel({ people, me, allowedDomain }: { people: Pers
                 </li>
               );
             })}
+          </ul>
+        )}
+      </AppCard>
+
+      <AppCard title="Removed people" helper="Removed people are not added again by staff sign-up. Allow again lets them be added automatically the next time they sign in, if sign-up is on for their address.">
+        {removed.length === 0 ? (
+          <p>No one has been removed.</p>
+        ) : (
+          <ul className="flex flex-col">
+            {removed.map((r) => (
+              <li key={r.email} className="flex flex-wrap items-center gap-3 border-b border-surface-border/40 py-3 first:pt-0 last:border-b-0 last:pb-0">
+                <div className="min-w-0 flex-1 basis-48">
+                  <p className="break-all font-medium">{r.email}</p>
+                  <p className="text-[13px] text-ink-2">
+                    removed by {r.blocked_by ?? "unknown"}, {fmt(r.blocked_at)}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  aria-label={`Allow ${r.email} again`}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const res = await unblockEmailAction(r.email);
+                      if (res.ok) toast.success(res.message);
+                      else toast.error(res.message);
+                    })
+                  }
+                >
+                  Allow again
+                </Button>
+              </li>
+            ))}
           </ul>
         )}
       </AppCard>

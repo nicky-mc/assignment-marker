@@ -1,3 +1,4 @@
+import { claimMarkerAccess } from "./claimAccess";
 import { authMode, isUnsafeProduction } from "./config";
 import { createSupabaseServerClient } from "./supabaseServer";
 
@@ -34,7 +35,12 @@ export async function getAccess(): Promise<Access> {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.from("allowed_users").select("role").eq("email", email).maybeSingle();
     if (error) return { status: "error" };
-    if (!data) return { status: "not_allowed", email };
+    if (!data) {
+      // Not on the list: ask once whether staff self sign-up applies. Only ever yields the marker role.
+      const claimed = await claimMarkerAccess();
+      if (claimed) return { status: "ok", email, role: claimed };
+      return { status: "not_allowed", email };
+    }
     return { status: "ok", email, role: data.role as Role };
   } catch {
     return { status: "error" };

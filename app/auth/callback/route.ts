@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { claimMarkerAccess } from "@/lib/auth/claimAccess";
 import { createSupabaseServerClient } from "@/lib/auth/supabaseServer";
 
 export async function GET(request: Request) {
@@ -12,6 +13,8 @@ export async function GET(request: Request) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // First sign-in: staff self sign-up (marker only, set by the database). The access gate asks again if this is skipped.
+      await claimMarkerAccess();
       const forwardedHost = request.headers.get("x-forwarded-host");
       if (process.env.NODE_ENV !== "development" && forwardedHost) {
         return NextResponse.redirect(`https://${forwardedHost}${next}`);

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../auth/adminAccess";
+import { validateDomains } from "../signupRules";
 import { callUserFunction, UserAdminError } from "./store";
 
 export interface UserActionResult {
@@ -34,4 +35,19 @@ export async function setRoleAction(email: string, role: string): Promise<UserAc
 export async function removePersonAction(email: string): Promise<UserActionResult> {
   await requireAdmin();
   return run(() => callUserFunction("remove_allowed_user", { p_email: clean(email) }), `${clean(email)} no longer has access.`);
+}
+
+export async function unblockEmailAction(email: string): Promise<UserActionResult> {
+  await requireAdmin();
+  return run(() => callUserFunction("unblock_email", { p_email: clean(email) }), `${clean(email)} can now be added automatically again when they sign in.`);
+}
+
+export async function setSignupSettingsAction(enabled: boolean, domains: string[]): Promise<UserActionResult> {
+  await requireAdmin(); // checked again inside the database function
+  const check = validateDomains(Array.isArray(domains) ? domains.filter((d) => typeof d === "string") : [], Boolean(enabled));
+  if (!check.ok) return { ok: false, message: check.message };
+  return run(
+    () => callUserFunction("set_signup_settings", { p_enabled: Boolean(enabled), p_domains: check.domains }),
+    enabled ? "Staff sign-up is on." : "Staff sign-up is off.",
+  );
 }
