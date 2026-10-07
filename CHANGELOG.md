@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-07: UI standards polish (presentation only)
+
+- Two page widths as tokens (narrow 720px, wide 1040px) with the header inside the page container; centred sign-in card with logo and an optional "Need access?" line; one editable "Feedback to send" field with Reset to AI draft and Copy feedback; one Highlighted or Edit preview surface; compact evidence rows with Expand all and Collapse all; one sticky save bar with "Edited" labels on the rubric editor; retired banner and lighter dialog backdrops; users page breadcrumbs, validation and own-row reasons; fewer name suggestions with Dismiss; proper alerts; Hide original after Anonymise and when Mark is pressed; skip link, page titles and focus return. No marking, scoring, anonymising, SQL, API or rubric content changes. Not added: the rubric and build audit line (no build or commit variable exists).
+
 ## 2026-10-07: Smooth carousel and collapsible marking steps
 
 - Carousel: no scroll-snap, drag with the mouse from anywhere on a card or gap, a short glide on release (skipped for reduced motion), native touch, trackpad and keyboard unchanged.

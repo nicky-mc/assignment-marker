@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import Alert from "../Alert";
 import ResultCard, { type MarkOutcome } from "../ResultCard";
 import { PRIMARY_BUTTON } from "./FormParts";
 
@@ -11,6 +13,7 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MarkOutcome | null>(null);
   const [feedback, setFeedback] = useState("");
+  const [aiDraft, setAiDraft] = useState("");
 
   async function run() {
     setBusy(true);
@@ -26,7 +29,9 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
       if (!res.ok) throw new Error(data.error ?? "Marking failed");
       const outcome = data as MarkOutcome;
       setResult(outcome);
-      setFeedback([outcome.feedback.recognition, outcome.feedback.explanation, ...outcome.feedback.nextSteps.map((s) => `- ${s}`), outcome.feedback.motivation].join("\n\n"));
+      const draft = [outcome.feedback.recognition, outcome.feedback.explanation, ...outcome.feedback.nextSteps.map((s) => `- ${s}`), outcome.feedback.motivation].join("\n\n");
+      setFeedback(draft);
+      setAiDraft(draft);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Marking failed");
     } finally {
@@ -36,9 +41,9 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
 
   return (
     <div className="flex flex-col gap-4">
-      <p role="status" className="rounded-md border-2 border-amber-700 bg-amber-50 text-amber-950 px-3 py-2 font-semibold">
-        DRAFT, not live. This marks against draft version {version}. Real marking is not affected.
-      </p>
+      <Alert variant="warning" title="DRAFT, not live">
+        This marks against draft version {version}. Real marking is not affected.
+      </Alert>
       <div className="flex flex-col gap-1">
         <label htmlFor="try-sample" className="font-medium text-base">
           Fictional sample submission
@@ -58,16 +63,20 @@ export default function TryDraft({ rubricId, version }: { rubricId: string; vers
         </button>
       </div>
       {error && (
-        <p role="alert" className="font-semibold text-danger">
+        <Alert variant="error" title="Marking did not complete">
           {error}
-        </p>
+        </Alert>
       )}
       {result && (
         <div className="flex flex-col gap-3">
-          <p role="status" className="rounded-md bg-amber-100 text-amber-950 px-3 py-2 font-semibold">
-            DRAFT, not live
-          </p>
-          <ResultCard result={result} editableFeedback={feedback} onFeedbackChange={setFeedback} onCopy={() => navigator.clipboard?.writeText(feedback)} copied={false} />
+          <ResultCard
+            result={result}
+            editableFeedback={feedback}
+            onFeedbackChange={setFeedback}
+            aiDraft={aiDraft}
+            onCopy={() => navigator.clipboard?.writeText(feedback).then(() => toast.success("Copied"), () => toast.error("Could not copy. Select the text and copy it yourself."))}
+            copied={false}
+          />
         </div>
       )}
     </div>

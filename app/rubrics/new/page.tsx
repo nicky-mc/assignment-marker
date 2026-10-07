@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import PageShell from "@/components/PageShell";
 import { notFound, redirect } from "next/navigation";
 import RubricEditor from "@/components/admin/RubricEditor";
 import { SummaryCard } from "@/components/SummaryCard";
@@ -6,6 +8,8 @@ import { rubricSource } from "@/lib/auth/config";
 import { listCourseRows } from "@/lib/rubricAdmin/store";
 import { stripBandPrefix } from "@/lib/rubricAdmin/validate";
 import { BAND_DESCRIPTIONS } from "@/lib/rubrics";
+
+export const metadata: Metadata = { title: "Add assignment" };
 
 // Add assignment: the same layout as a rubric page, in edit mode with empty blocks. Admins only, database rubrics only.
 export default async function NewRubricPage({ searchParams }: { searchParams: Promise<{ course?: string }> }) {
@@ -20,8 +24,7 @@ export default async function NewRubricPage({ searchParams }: { searchParams: Pr
   if (!found) notFound();
 
   return (
-    <div className="flex flex-col flex-1 items-center">
-      <main className="flex w-full max-w-5xl flex-col gap-4 px-6 pt-6 pb-16">
+    <PageShell width="wide">
         <RubricEditor
           mode="create"
           rubricId=""
@@ -50,7 +53,6 @@ export default async function NewRubricPage({ searchParams }: { searchParams: Pr
             </SummaryCard>
           }
         />
-      </main>
-    </div>
+    </PageShell>
   );
 }

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+import Alert from "@/components/Alert";
+import PageShell from "@/components/PageShell";
 import { HeroCard } from "@/components/HeroCard";
 import MarkingForm from "@/components/MarkingForm";
 import { requirePageAccess } from "@/lib/auth/pageAccess";
 import { listCourses, listRubrics } from "@/lib/rubricStore";
+
+export const metadata: Metadata = { title: "Mark a submission" };
 
 export default async function Home() {
   await requirePageAccess();
@@ -16,8 +21,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col flex-1 items-center">
-      <main className="flex flex-1 w-full max-w-3xl flex-col gap-4 pt-6 pb-16 px-6">
+    <PageShell>
         <HeroCard
           icon={<Image src="/te-monogram.png" alt="" width={30} height={46} className="h-9 w-auto" />}
           title="AssisTED"
@@ -27,13 +31,11 @@ export default async function Home() {
         {data ? (
           <MarkingForm courses={data.courses} rubrics={data.rubrics} />
         ) : (
-          <p className="rounded-[14px] border-2 border-danger bg-surface p-5 text-sm font-medium text-ink" role="alert">
-            Could not load the rubrics, so marking is unavailable. Nothing has been sent anywhere. Please try
-            again shortly, or ask an admin.
-          </p>
+          <Alert variant="error" title="Could not load the rubrics">
+            Marking is unavailable. Nothing has been sent anywhere. Please try again shortly, or ask an admin.
+          </Alert>
         )}
-      </main>
-    </div>
+    </PageShell>
   );
 }
 

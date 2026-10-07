@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,7 @@ export default function CourseMenu({ courseId, courseName, hasRubrics }: { cours
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   function remove() {
     setError(null);
@@ -37,7 +38,7 @@ export default function CourseMenu({ courseId, courseName, hasRubrics }: { cours
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "icon" }))} aria-label={`Course options for ${courseName}`}>
+        <DropdownMenuTrigger className={cn(buttonVariants({ variant: "outline", size: "icon" }))} aria-label={`Course options for ${courseName}`} onClick={(e) => (triggerRef.current = e.currentTarget)}>
           <MoreHorizontal aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-auto min-w-56 max-w-[calc(100vw-2rem)] border-2 border-border p-2">
@@ -48,7 +49,7 @@ export default function CourseMenu({ courseId, courseName, hasRubrics }: { cours
         </DropdownMenuContent>
       </DropdownMenu>
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent finalFocus={triggerRef}>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this empty course?</AlertDialogTitle>
             <AlertDialogDescription>

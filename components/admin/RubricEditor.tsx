@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } f
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Alert from "@/components/Alert";
 import { AppCard } from "@/components/AppCard";
 import { HeroCard } from "@/components/HeroCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -57,7 +58,17 @@ export interface EditorProps {
 
 const BODY = "max-w-[70ch] whitespace-pre-line break-words text-base";
 const ON_PURPLE_SECONDARY = "border-brand-secondary bg-transparent text-brand-secondary hover:bg-brand-secondary/15";
+const ON_PURPLE_DANGER = "border-danger-on-purple bg-transparent text-danger-on-purple hover:bg-danger-on-purple/15 hover:text-danger-on-purple";
 const ON_PURPLE_PRIMARY = "border-brand-secondary bg-brand-secondary text-brand-primary hover:bg-brand-secondary/90";
+
+// Marks a card whose content differs from the saved version.
+function EditedChip({ onPurple = false }: { onPurple?: boolean }) {
+  return (
+    <span className={cn("rounded-full border-2 px-2 py-0.5 text-[12px] font-semibold", onPurple ? "border-brand-secondary text-brand-secondary" : "border-surface-border text-ink")}>
+      Edited
+    </span>
+  );
+}
 
 const sameBands = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
@@ -83,6 +94,8 @@ export default function RubricEditor(props: EditorProps) {
     mode === "create"
       ? Boolean(values.week || values.title || values.overview || values.requirements || values.stretchGoal || values.bands.some(Boolean))
       : Array.from(open).some(changed);
+
+  const changedCount = (mode === "create" ? ALL_BLOCKS : Array.from(open)).filter(changed).length;
 
   // The same rules the server applies, so warnings show next to the field as you type.
   const warnings = useMemo(
@@ -131,15 +144,6 @@ export default function RubricEditor(props: EditorProps) {
 
   function openBlocks(keys: BlockKey[]) {
     setOpen((prev) => new Set([...prev, ...keys]));
-  }
-  function closeBlock(k: BlockKey) {
-    setValues((p) => (k === "bands" ? { ...p, bands: baseline.bands } : k === "title" ? { ...p, title: baseline.title, week: baseline.week } : { ...p, [k]: baseline[k] }));
-    setOpen((prev) => {
-      const next = new Set(prev);
-      next.delete(k);
-      return next;
-    });
-    setState(EMPTY_STATE);
   }
   function cancelAll() {
     if (mode === "create") {
@@ -190,7 +194,7 @@ export default function RubricEditor(props: EditorProps) {
     const w = warningsFor(k);
     if (w.length === 0) return null;
     return (
-      <div role="status" className="flex flex-col gap-2 rounded-[10px] border-2 border-amber-700 bg-amber-100 px-3 py-3 text-amber-950">
+      <div role="status" className="flex flex-col gap-2 rounded-[10px] border-2 border-draft-ink bg-draft px-3 py-3 text-draft-ink">
         <p className="font-semibold">Please read this before saving</p>
         <p className="text-sm">
           This text contains wording that can look like an instruction to the AI ({Array.from(new Set(w.map((x) => `"${x.phrase}"`))).join(", ")}). Rubric text goes
@@ -204,26 +208,22 @@ export default function RubricEditor(props: EditorProps) {
     );
   };
 
-  const blockFooter = (k: BlockKey) => (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      {mode === "view" && (
-        <Button type="button" variant="outline" size="sm" onClick={() => closeBlock(k)}>
-          Cancel
-        </Button>
-      )}
-      <Button type="button" size="sm" onClick={save} disabled={pending}>
-        {pending ? "Saving..." : mode === "create" ? "Create draft" : "Save draft"}
-      </Button>
-    </div>
-  );
-
   const textBlock = (k: Exclude<BlockKey, "title" | "bands">, title: string, limit: number) => {
     const o = canEdit && open.has(k);
     const fid = `field-${k}`;
     const err = fieldError(k);
     return (
       <AppCard
-        title={o ? <label htmlFor={fid}>{title}</label> : title}
+        title={
+          o ? (
+            <span className="flex flex-wrap items-center gap-2">
+              <label htmlFor={fid}>{title}</label>
+              {changed(k) && <EditedChip />}
+            </span>
+          ) : (
+            title
+          )
+        }
         action={
           canEdit && !o ? (
             <Button type="button" variant="outline" size="sm" onClick={() => openBlocks([k])}>
@@ -248,10 +248,7 @@ export default function RubricEditor(props: EditorProps) {
               </p>
             )}
             {warningPanel(k)}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              {counter(values[k].trim().length, limit, `${fid}-count`)}
-              {blockFooter(k)}
-            </div>
+            {counter(values[k].trim().length, limit, `${fid}-count`)}
           </>
         ) : (
           <p className={BODY}>{values[k]}</p>
@@ -290,6 +287,12 @@ export default function RubricEditor(props: EditorProps) {
           triggerClassName={ON_PURPLE_PRIMARY}
         />
       )}
+      <a
+        href={`/admin/rubrics/export?id=${encodeURIComponent(props.rubricId)}&version=${props.shownVersion}`}
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }), ON_PURPLE_SECONDARY)}
+      >
+        Export
+      </a>
       {liveVersion !== null && (
         <StatusActionDialog
           intent="retire"
@@ -299,15 +302,9 @@ export default function RubricEditor(props: EditorProps) {
           title={`Retire version ${liveVersion}?`}
           description="It stays in the history but can no longer be used for marking."
           confirmLabel="Retire"
-          triggerClassName={ON_PURPLE_SECONDARY}
+          triggerClassName={ON_PURPLE_DANGER}
         />
       )}
-      <a
-        href={`/admin/rubrics/export?id=${encodeURIComponent(props.rubricId)}&version=${props.shownVersion}`}
-        className={cn(buttonVariants({ variant: "outline", size: "sm" }), ON_PURPLE_SECONDARY)}
-      >
-        Export
-      </a>
       <RubricMoreMenu rubricId={props.rubricId} title={values.title || baseline.title} liveVersion={liveVersion} everLive={Boolean(props.everLive)} triggerClassName={ON_PURPLE_SECONDARY} />
     </>
   ) : undefined;
@@ -326,6 +323,15 @@ export default function RubricEditor(props: EditorProps) {
     ) : (
       <StatusBadge status={props.shownStatus} version={props.shownVersion} admin={admin} onPurple />
     );
+
+  const asideNode = titleOpen && changed("title") ? (
+    <span className="flex flex-wrap items-center gap-2">
+      <EditedChip onPurple />
+      {statusBadges}
+    </span>
+  ) : (
+    statusBadges
+  );
 
   const errorEntries = Object.entries(errors).filter(([k]) => k !== "acknowledged");
 
@@ -356,7 +362,7 @@ export default function RubricEditor(props: EditorProps) {
             values.week
           )
         }
-        aside={statusBadges}
+        aside={asideNode}
         title={
           titleOpen || mode === "create" ? (
             <span className="flex flex-col gap-1">
@@ -379,16 +385,6 @@ export default function RubricEditor(props: EditorProps) {
                   {errors.title}
                 </span>
               )}
-              {titleOpen && mode === "view" && (
-                <span className="flex gap-2 pt-1">
-                  <Button type="button" variant="outline" size="sm" className={ON_PURPLE_SECONDARY} onClick={() => closeBlock("title")}>
-                    Cancel
-                  </Button>
-                  <Button type="button" size="sm" className={ON_PURPLE_PRIMARY} onClick={save} disabled={pending}>
-                    Save draft
-                  </Button>
-                </span>
-              )}
               {warningPanel("title")}
             </span>
           ) : (
@@ -398,6 +394,10 @@ export default function RubricEditor(props: EditorProps) {
         note={props.heroNote}
         actions={heroActions}
       />
+
+      {mode === "view" && props.shownStatus === "retired" && (
+        <Alert variant="warning" title="This rubric is retired and is not used for marking." />
+      )}
 
       {mode === "create" && (
         <details className="rounded-[10px] border-2 border-surface-border px-4 py-3">
@@ -466,7 +466,16 @@ export default function RubricEditor(props: EditorProps) {
           {textBlock("stretchGoal", "What earns a 4", LIMITS.stretchGoal)}
 
           <AppCard
-            title="Band descriptions"
+            title={
+              bandsOpen && changed("bands") ? (
+                <span className="flex flex-wrap items-center gap-2">
+                  Band descriptions
+                  <EditedChip />
+                </span>
+              ) : (
+                "Band descriptions"
+              )
+            }
             action={
               canEdit && !bandsOpen ? (
                 <Button type="button" variant="outline" size="sm" onClick={() => openBlocks(["bands"])}>
@@ -518,7 +527,6 @@ export default function RubricEditor(props: EditorProps) {
                 </ol>
                 {usesGeneric && <p className="text-sm">All five are empty, so the generic policy bands will apply.</p>}
                 {warningPanel("bands")}
-                {blockFooter("bands")}
               </>
             ) : (
               <ol className="flex flex-col gap-3">
@@ -537,27 +545,27 @@ export default function RubricEditor(props: EditorProps) {
 
           {props.historySlot}
 
-          {editing && (
-            <div className="purple-card sticky bottom-4 z-20 flex flex-wrap items-center gap-3 rounded-[14px] px-4 py-3">
-              <p className="min-w-0 flex-1 text-sm text-purple-body" role="status">
-                {open.size} block{open.size === 1 ? "" : "s"} open{dirty ? ", unsaved changes" : ""}
-              </p>
-              {needsAck && (
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="size-5 accent-brand-secondary" />
-                  I have read the warning
-                </label>
-              )}
-              <Button type="button" variant="outline" size="sm" className={ON_PURPLE_SECONDARY} onClick={cancelAll}>
-                Cancel
-              </Button>
-              <Button type="button" size="sm" className={ON_PURPLE_PRIMARY} onClick={save} disabled={pending}>
-                {pending ? "Saving..." : mode === "create" ? "Create draft" : "Save draft"}
-              </Button>
-            </div>
-          )}
         </div>
       </div>
+      {editing && (
+        <div role="region" aria-label="Unsaved changes" className="purple-card sticky bottom-4 z-20 flex flex-wrap items-center gap-3 rounded-[14px] px-4 py-3">
+          <p className="min-w-0 flex-1 text-sm text-purple-body" role="status">
+            {changedCount} {changedCount === 1 ? "section" : "sections"} changed
+          </p>
+          {needsAck && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="size-5 accent-brand-secondary" />
+              I have read the warning
+            </label>
+          )}
+          <Button type="button" variant="outline" size="sm" className={ON_PURPLE_SECONDARY} onClick={cancelAll}>
+            Discard
+          </Button>
+          <Button type="button" size="sm" className={ON_PURPLE_PRIMARY} onClick={save} disabled={pending || (mode === "view" && changedCount === 0)}>
+            {pending ? "Saving..." : mode === "create" ? "Create draft" : "Save draft"}
+          </Button>
+        </div>
+      )}
       {mode === "create" && (
         <p className="text-sm">
           <Link href="/admin/rubrics/import" className="underline">
