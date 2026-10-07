@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Rubric library admin (edit in place, create, approve, history)
+
+- Admins reading rubrics from the database can edit each block in place (with counters, instruction-wording warnings and an unsaved-changes guard), edit band descriptions, add assignments and courses, import and export, approve and retire through confirm dialogs, try a draft in a sheet, and see a history timeline. Markers see none of it.
+- Uses the existing server actions unchanged; `/admin/rubrics*` pages redirect to the library. Toasts and inline banners report results.
+- Checks: `npm run build` (routes dynamic), `tsc` and lint. Not yet looked at in a browser or run against Supabase.
+
 ## 2026-10-07: Library polish
 
 - The rubric carousel can be dragged with a mouse (touch, trackpad and keyboard stay native), its scrollbar is hidden, and Previous and Next disable at the ends. `color-scheme` now follows the theme, so native controls match.
