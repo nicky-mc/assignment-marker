@@ -3,10 +3,13 @@ import { cn } from "@/lib/utils";
 // The green result summary card: purple text on green.
 export function SummaryCard({
   heading,
+  showHeading = false,
   className,
   children,
 }: {
   heading: string;
+  /** Show the heading as visible text (otherwise it is for screen readers only). */
+  showHeading?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -15,7 +18,7 @@ export function SummaryCard({
       aria-label={heading}
       className={cn("flex flex-col gap-3 rounded-[14px] bg-brand-secondary p-5 text-brand-primary", className)}
     >
-      <h2 className="sr-only">{heading}</h2>
+      <h2 className={showHeading ? "font-heading text-[18px] font-semibold" : "sr-only"}>{heading}</h2>
       {children}
     </section>
   );

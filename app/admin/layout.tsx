@@ -8,8 +8,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/" className="underline font-medium">
             Back to marking
           </Link>
-          <Link href="/admin/rubrics" className="underline font-medium">
-            All rubrics
+          <Link href="/rubrics" className="underline font-medium">
+            Rubric library
           </Link>
         </nav>
         {children}
