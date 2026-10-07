@@ -62,7 +62,7 @@ export default async function RubricAdminPage({
         </h2>
         <ul className="flex flex-col gap-4">
           {detail.versions.map((v) => (
-            <li key={v.version} className="flex flex-col gap-2 border-b border-brand-primary/15 pb-4">
+            <li key={v.version} className="flex flex-col gap-2 border-b border-surface-border/40 pb-4">
               <p className="text-base">
                 <span className="font-semibold">Version {v.version}</span>: <span className="font-medium">{v.status}</span>
                 {v.status === "approved" ? " (live)" : ""}
@@ -144,8 +144,8 @@ export default async function RubricAdminPage({
               <li key={h.id} className="text-base">
                 <span className="font-semibold">{h.action}</span> version {h.version} by {h.changed_by ?? "unknown"}, {fmtDate(h.changed_at)}
                 <details className="text-sm">
-                  <summary className="cursor-pointer w-fit underline focus-visible:outline-2 focus-visible:outline-offset-2">View snapshot</summary>
-                  <pre className="whitespace-pre-wrap break-words max-w-[70ch] overflow-x-auto bg-brand-primary-tint dark:bg-background rounded-md p-3 mt-2">
+                  <summary className="cursor-pointer w-fit underline">View snapshot</summary>
+                  <pre className="whitespace-pre-wrap break-words max-w-[70ch] overflow-x-auto bg-field rounded-[10px] p-3 mt-2">
                     {JSON.stringify(h.snapshot, null, 2)}
                   </pre>
                 </details>

@@ -23,11 +23,11 @@ export default function ImportForm() {
           name="file"
           type="file"
           accept=".json,application/json"
-          className="text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary dark:focus-visible:outline-brand-secondary"
+          className="text-base"
         />
       </div>
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border-2 border-red-700 px-3 py-2 max-w-[70ch]">
+        <div role="alert" className="rounded-md border-2 border-danger px-3 py-2 max-w-[70ch]">
           <p className="font-semibold">Please fix these, then import again:</p>
           <ul className="list-disc pl-5 text-base">
             {errors.map(([field, msg]) => (

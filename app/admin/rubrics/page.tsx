@@ -58,7 +58,7 @@ export default async function RubricsAdminPage({ searchParams }: { searchParams:
               <table className="w-full text-left text-base">
                 <caption className="sr-only">Rubrics in {g.name}</caption>
                 <thead>
-                  <tr className="border-b-2 border-brand-primary/30">
+                  <tr className="border-b-2 border-surface-border">
                     <th scope="col" className="py-2 pr-3">Id</th>
                     <th scope="col" className="py-2 pr-3">Week</th>
                     <th scope="col" className="py-2 pr-3">Title</th>
@@ -71,7 +71,7 @@ export default async function RubricsAdminPage({ searchParams }: { searchParams:
                   {g.rows.map((r) => {
                     const last = data?.lastChange.get(`${r.id}@${r.version}`);
                     return (
-                      <tr key={`${r.id}@${r.version}`} className="border-b border-brand-primary/15 align-top">
+                      <tr key={`${r.id}@${r.version}`} className="border-b border-surface-border/40 align-top">
                         <td className="py-2 pr-3">
                           <Link href={`/admin/rubrics/${encodeURIComponent(r.id)}`} className="underline font-medium break-all">
                             {r.id}

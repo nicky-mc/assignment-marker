@@ -10,11 +10,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="flex flex-col flex-1 items-center">
       <main className="flex w-full max-w-3xl flex-col gap-6 pt-6 pb-16 px-6">
-        <div className="flex flex-col gap-4 rounded-lg p-6 bg-brand-secondary text-brand-primary border-4 border-brand-primary">
+        <div className="flex flex-col gap-4 rounded-[14px] border-2 border-surface-border bg-surface p-5 text-ink">
           <h1 className="text-2xl font-semibold">Sign in to AssisTED</h1>
           <p className="text-sm">Use your Tech Educators Google account.</p>
           {error && (
-            <p className="text-sm text-red-700" role="alert">
+            <p className="text-sm text-danger" role="alert">
               Sign-in did not complete. Please try again.
             </p>
           )}

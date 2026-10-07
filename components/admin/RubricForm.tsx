@@ -118,14 +118,14 @@ export default function RubricForm({
         error={err.stretchGoal}
       />
 
-      <fieldset className="flex flex-col gap-4 border-2 border-brand-primary/30 rounded-md p-4">
+      <fieldset className="flex flex-col gap-4 border-2 border-surface-border rounded-[10px] p-4">
         <legend className="font-heading text-lg font-semibold px-2">Band descriptions (optional)</legend>
         <p className="text-base max-w-[70ch]">
           Fill in all five (bands 0 to 4), or leave all five empty. If they are all empty, the generic policy
           bands are used. Write only the description: the number is added for you.
         </p>
         {err.bandDescriptions && (
-          <p role="alert" className="text-sm font-semibold text-red-700 dark:text-red-400">
+          <p role="alert" className="text-sm font-semibold text-danger">
             {err.bandDescriptions}
           </p>
         )}
