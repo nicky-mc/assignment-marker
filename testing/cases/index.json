@@ -550,5 +550,41 @@
     "provenance": "New in this run; not in any committed file",
     "callsInRun": 1,
     "sentTextIdenticalToFile": true
+  },
+  {
+    "file": "controls/N1.txt",
+    "stage": "2-control",
+    "name": "N1-AIL-wk1-own-piece-very-short",
+    "group": null,
+    "rubricId": "wk1-evaluate-llm-output",
+    "chars": 963,
+    "sha256": "1efd9e84cbbaa19114e788fd39c0faa10533ee4f10e04201f498eba344219353",
+    "provenance": "recovered from the earlier session record (original wording); designed mark 3; rubric wk1-evaluate-llm-output",
+    "callsInRun": 1,
+    "sentTextIdenticalToFile": true
+  },
+  {
+    "file": "controls/N2.txt",
+    "stage": "2-control",
+    "name": "N2-AIL-wk1-own-piece-labelled-Draft-1",
+    "group": null,
+    "rubricId": "wk1-evaluate-llm-output",
+    "chars": 1361,
+    "sha256": "da2d3b3f8a46f28148cb4472b2c88ad636cf0f2cfe6c904fbfee89f1c0407599",
+    "provenance": "recovered from the earlier session record (original wording); designed mark 3; rubric wk1-evaluate-llm-output",
+    "callsInRun": 1,
+    "sentTextIdenticalToFile": true
+  },
+  {
+    "file": "controls/N3.txt",
+    "stage": "2-control",
+    "name": "N3-AIL-wk1-own-piece-embedded-mid-submission",
+    "group": null,
+    "rubricId": "wk1-evaluate-llm-output",
+    "chars": 1322,
+    "sha256": "6bf389bba1dd4470154cb0d935183b196244bf7b9671ebbeca91a367f7e81498",
+    "provenance": "recovered from the earlier session record (original wording); designed mark 3; rubric wk1-evaluate-llm-output",
+    "callsInRun": 1,
+    "sentTextIdenticalToFile": true
   }
 ]
