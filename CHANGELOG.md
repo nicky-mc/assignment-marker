@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Smooth carousel and collapsible marking steps
+
+- Carousel: no scroll-snap, drag with the mouse from anywhere on a card or gap, a short glide on release (skipped for reduced motion), native touch, trackpad and keyboard unchanged.
+- Marking page: the four step cards collapse with a one-line summary (never the file name or learner text), collapse automatically when Mark is pressed, show a progress card with Cancel while marking, then scroll to the result, focus its heading and announce "Draft ready". Expand all and Collapse all appear once there is a result.
+- Checks: `tsc`, lint, anonymiser script 38 of 38, `npm run build` (routes dynamic). Not yet looked at in a browser.
+
 ## 2026-10-07: Admin user management and deleting rubrics or empty courses
 
 - `/admin/users` (admins only): add people, make admin or marker, remove access, each behind a confirmation, with a history timeline. "Manage users" is in the menu for admins. Changes go through database functions that refuse to remove the last admin or your own access.

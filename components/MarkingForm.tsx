@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { anonymise, suggestTerms, type RedactionCategory } from "@/lib/anonymise";
 import { extractTextFromFile } from "@/lib/extractText";
 import { Upload, X } from "lucide-react";
@@ -9,8 +9,11 @@ import { AppCard } from "./AppCard";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Skeleton } from "./ui/skeleton";
 import { NativeSelect } from "./ui/native-select";
 import { Textarea } from "./ui/textarea";
+
+type StepKey = "course" | "submission" | "anonymise" | "preview";
 
 function buildFeedbackText(result: MarkOutcome): string {
   const lines: string[] = [];
@@ -119,6 +122,11 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   const [nameInput, setNameInput] = useState("");
   const [terms, setTerms] = useState<string[]>([]);
   const markRequestId = useRef(0);
+  // Which step cards are open. Opening or closing never resets anything by itself: the reset rules apply only when content changes.
+  const [openSteps, setOpenSteps] = useState<Record<StepKey, boolean>>({ course: true, submission: true, anonymise: true, preview: true });
+  const openBeforeMark = useRef<Record<StepKey, boolean> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const [marking, setMarking] = useState(false);
   const [result, setResult] = useState<MarkOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -232,6 +240,11 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
 
   async function handleMark() {
     const requestId = ++markRequestId.current;
+    // Collapse the step cards so the result is the focus. Remember how they were, to restore them if marking fails.
+    openBeforeMark.current = openSteps;
+    setAllSteps(false);
+    const controller = new AbortController();
+    abortRef.current = controller;
     setMarking(true);
     setError(null);
     setResult(null);
@@ -241,6 +254,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rubricId, anonymisedSubmission: anonymisedText }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (requestId !== markRequestId.current) return; // the text or assignment changed meanwhile
@@ -252,17 +266,63 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
       setEditableFeedback(buildFeedbackText(outcome));
     } catch (err) {
       if (requestId !== markRequestId.current) return;
+      // Cancelled or failed: put the cards back as they were. A failure also shows the existing error message.
+      if (openBeforeMark.current) setOpenSteps(openBeforeMark.current);
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Marking failed");
     } finally {
       if (requestId === markRequestId.current) setMarking(false);
     }
   }
 
+  // Cancel stops waiting for the answer. The server may still finish the request it has already started.
+  function handleCancelMark() {
+    abortRef.current?.abort();
+  }
+
   const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
+
+  // One-line summaries for collapsed cards. They never include the file name or any of the learner's text.
+  const wordCount = rawSubmission.trim() ? rawSubmission.trim().split(/\s+/).length : 0;
+  const summaries: Record<StepKey, string> = {
+    course: `${courses.find((c) => c.id === courseId)?.name ?? ""}, ${selectedRubric.week}: ${selectedRubric.title}`,
+    submission: wordCount === 0 ? "No text yet" : `${wordCount.toLocaleString("en-GB")} ${wordCount === 1 ? "word" : "words"}`,
+    anonymise: counts ? summariseCounts(counts) : "Identifying details not removed yet",
+    preview: hasAnonymised && confirmedAnonymised ? "Preview checked and confirmed" : "Preview not confirmed yet",
+  };
+  const setStep = (key: StepKey) => (open: boolean) => setOpenSteps((p) => ({ ...p, [key]: open }));
+  const setAllSteps = (open: boolean) => setOpenSteps({ course: open, submission: open, anonymise: open, preview: open });
+
+  // When the result arrives: scroll it into view, move focus to its heading, and announce it.
+  useEffect(() => {
+    if (!result) return;
+    const box = resultRef.current;
+    if (!box) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    const heading = box.querySelector("h2");
+    if (heading instanceof HTMLElement) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+  }, [result]);
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <AppCard tone="purple" step={1} title="Course and assignment">
+      <p role="status" aria-live="polite" className="sr-only">
+        {result ? "Draft ready" : ""}
+      </p>
+      {result && (
+        <div className="flex gap-2">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setAllSteps(true)}>
+            Expand all
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => setAllSteps(false)}>
+            Collapse all
+          </Button>
+        </div>
+      )}
+      <AppCard tone="purple" step={1} title="Course and assignment" collapsible={{ open: openSteps.course, onOpenChange: setStep("course"), summary: summaries.course, label: "Course and assignment" }}>
         <div className="flex flex-col gap-2">
           <label htmlFor="course" className="font-medium">
             Course
@@ -301,6 +361,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
       <AppCard
         step={2}
         title={<label htmlFor="submission">Learner submission</label>}
+        collapsible={{ open: openSteps.submission, onOpenChange: setStep("submission"), summary: summaries.submission, label: "Learner submission" }}
         action={
           <>
             <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={extracting}>
@@ -339,7 +400,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
         )}
       </AppCard>
 
-      <AppCard step={3} title="Remove identifying details">
+      <AppCard step={3} title="Remove identifying details" collapsible={{ open: openSteps.anonymise, onOpenChange: setStep("anonymise"), summary: summaries.anonymise, label: "Remove identifying details" }}>
         <div className="flex flex-col gap-2">
           <label htmlFor="name-input" className="font-medium">
             Names to remove
@@ -441,7 +502,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
         </div>
       </AppCard>
 
-      <AppCard step={4} title="Check the preview">
+      <AppCard step={4} title="Check the preview" collapsible={{ open: openSteps.preview, onOpenChange: setStep("preview"), summary: summaries.preview, label: "Check the preview" }}>
         {hasAnonymised && (
           <div className="flex flex-col gap-3">
             <h3 className="font-heading font-semibold">
@@ -506,14 +567,33 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
         </p>
       )}
 
+      {marking && (
+        <AppCard title="Marking this submission...">
+          <div role="status" aria-busy="true" className="flex flex-col gap-3">
+            <span className="sr-only">Marking this submission</span>
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          <div>
+            <Button type="button" variant="outline" size="sm" onClick={handleCancelMark}>
+              Cancel
+            </Button>
+          </div>
+        </AppCard>
+      )}
+
       {result && (
-        <ResultCard
-          result={result}
-          editableFeedback={editableFeedback}
-          onFeedbackChange={setEditableFeedback}
-          onCopy={handleCopyFeedback}
-          copied={feedbackCopied}
-        />
+        <div ref={resultRef} className="flex scroll-mt-4 flex-col gap-4">
+          <ResultCard
+            result={result}
+            editableFeedback={editableFeedback}
+            onFeedbackChange={setEditableFeedback}
+            onCopy={handleCopyFeedback}
+            copied={feedbackCopied}
+          />
+        </div>
       )}
     </div>
   );
