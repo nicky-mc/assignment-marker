@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Staff self sign-up as marker (domain-limited, removal sticks)
+
+- A person who signs in with a verified Google account at an allowed domain (default techeducators.co.uk, exact match only) is added as a marker on first sign-in, by the database function `claim_marker_access()` called from the server. It never creates or changes an admin. Removing a person blocks their email until an admin chooses Allow again or adds them by hand.
+- Users page: Staff sign-up card (on or off, up to 5 domains, free-mail refused, confirmation before any change), Self sign-up and New labels, Removed people list with Allow again, self sign-up shown in the history.
+- Needs `supabase/migrations/004_self_signup.sql` (paste into the SQL editor; it changes `add_allowed_user`, `remove_allowed_user` and the history action check). Checks: `scripts/check-signup-rules.ts` 14 of 14, `tsc`, lint, `npm run build`. Not run against Supabase or looked at in a browser.
+
 ## 2026-10-07: UI standards polish (presentation only)
 
 - Two page widths as tokens (narrow 720px, wide 1040px) with the header inside the page container; centred sign-in card with logo and an optional "Need access?" line; one editable "Feedback to send" field with Reset to AI draft and Copy feedback; one Highlighted or Edit preview surface; compact evidence rows with Expand all and Collapse all; one sticky save bar with "Edited" labels on the rubric editor; retired banner and lighter dialog backdrops; users page breadcrumbs, validation and own-row reasons; fewer name suggestions with Dismiss; proper alerts; Hide original after Anonymise and when Mark is pressed; skip link, page titles and focus return. No marking, scoring, anonymising, SQL, API or rubric content changes. Not added: the rubric and build audit line (no build or commit variable exists).

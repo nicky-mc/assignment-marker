@@ -4,7 +4,9 @@ import type { AccessHistoryRow } from "@/lib/userAdmin/store";
 const fmt = (iso: string) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
 function describe(h: AccessHistoryRow): string {
-  if (h.action === "added") return `${h.email} was added as ${h.new_role ?? "a user"}`;
+  if (h.action === "added") return `${h.email} was added as ${h.new_role ?? "a user"}${h.changed_by === "self sign-up" ? " by self sign-up" : ""}`;
+  if (h.action === "settings_changed") return `Staff sign-up changed from ${h.old_role ?? "unknown"} to ${h.new_role ?? "unknown"}`;
+  if (h.action === "unblocked") return `${h.email} can be added by self sign-up again`;
   if (h.action === "role_changed") return `${h.email} changed from ${h.old_role} to ${h.new_role}`;
   return `${h.email} lost access (was ${h.old_role ?? "a user"})`;
 }
