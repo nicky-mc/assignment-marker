@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pencil, Search } from "lucide-react";
 import { AppCard } from "./AppCard";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { useDragScroll } from "./useDragScroll";
 import type { LibraryItem } from "@/lib/rubricStore";
 
 type Filter = "all" | "live" | "drafts" | "retired";
@@ -44,13 +45,39 @@ function RubricCard({ item, admin }: { item: LibraryItem; admin: boolean }) {
 
 function CourseRow({ courseId, name, items, all, admin }: { courseId: string; name: string; items: LibraryItem[]; all: LibraryItem[]; admin: boolean }) {
   const scroller = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
   const headingId = `course-heading-${courseId}`;
+  useDragScroll(scroller);
 
-  function scrollBy(direction: 1 | -1) {
+  // Previous and Next are disabled at the start and end; kept up to date on scroll and on resize.
+  const update = useCallback(() => {
     const el = scroller.current;
     if (!el) return;
+    setCanPrev(el.scrollLeft > 1);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [update, items.length]);
+
+  // One card at a time (card width plus the 16px gap). Instant when the visitor prefers reduced motion.
+  function scrollBy(direction: 1 | -1, enabled: boolean) {
+    const el = scroller.current;
+    if (!el || !enabled) return;
+    const card = el.querySelector("li");
+    const step = (card?.getBoundingClientRect().width ?? el.clientWidth * 0.8) + 16;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth" });
+    el.scrollBy({ left: direction * step, behavior: reduce ? "auto" : "smooth" });
   }
 
   const live = all.filter((i) => i.status === "approved").length;
@@ -69,7 +96,7 @@ function CourseRow({ courseId, name, items, all, admin }: { courseId: string; na
 
   return (
     <section id={`course-${courseId}`} aria-labelledby={headingId} className="flex scroll-mt-4 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <h2 id={headingId} className="font-heading text-[18px] font-semibold">
             {name}
@@ -77,23 +104,40 @@ function CourseRow({ courseId, name, items, all, admin }: { courseId: string; na
           <p className="text-[13px] text-ink-2">{counts}</p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" size="icon" onClick={() => scrollBy(-1)} aria-label={`Previous assignments in ${name}`}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => scrollBy(-1, canPrev)}
+            aria-disabled={!canPrev}
+            aria-label={`Previous assignments in ${name}`}
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
+          >
             <ChevronLeft aria-hidden="true" />
           </Button>
-          <Button type="button" variant="outline" size="icon" onClick={() => scrollBy(1)} aria-label={`Next assignments in ${name}`}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => scrollBy(1, canNext)}
+            aria-disabled={!canNext}
+            aria-label={`Next assignments in ${name}`}
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
+          >
             <ChevronRight aria-hidden="true" />
           </Button>
         </div>
       </div>
-      {/* A horizontally scrolling row. Native scroll-snap keeps swipe, trackpad and keyboard working; a focused card scrolls into view. */}
+      {/* A horizontally scrolling row. Native scrolling and scroll-snap keep swipe, trackpad and keyboard working;
+          mouse drag is added by useDragScroll. Padding and scroll-padding keep the focus ring from being clipped. */}
       <div
         ref={scroller}
         role="region"
         aria-label={`${name} assignments`}
         tabIndex={0}
-        className="-mx-1 overflow-x-auto scroll-smooth px-1 pt-1 pb-3 [scroll-padding-inline:0.25rem] motion-reduce:scroll-auto"
+        className="scroll-row -mx-2 snap-x snap-proximity overflow-x-auto scroll-smooth px-2 pt-2 pb-3 [scroll-padding-inline:0.5rem] motion-reduce:scroll-auto"
       >
-        <ul className="flex snap-x snap-proximity gap-4">
+        <ul className="flex gap-4">
           {items.map((item) => (
             <li key={item.id} className="w-64 shrink-0 snap-start sm:w-72">
               <RubricCard item={item} admin={admin} />
@@ -132,8 +176,8 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex flex-1 flex-col gap-1">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex min-w-56 flex-1 flex-col gap-1">
           <label htmlFor="rubric-search" className="font-medium">
             Search rubrics
           </label>
@@ -145,7 +189,7 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Title, summary or week"
-              className="pl-9"
+              className="h-10 pl-9"
             />
           </div>
         </div>
@@ -155,7 +199,6 @@ export default function RubricLibrary({ items, admin }: { items: LibraryItem[]; 
               <Button
                 key={f.id}
                 type="button"
-                size="sm"
                 variant={filter === f.id ? "default" : "outline"}
                 aria-pressed={filter === f.id}
                 onClick={() => setFilter(f.id)}

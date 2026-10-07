@@ -4,8 +4,8 @@ import { AppCard } from "@/components/AppCard";
 import { HeroCard } from "@/components/HeroCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SummaryCard } from "@/components/SummaryCard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authMode, rubricSource } from "@/lib/auth/config";
+import { FILE_SOURCE_NOTE } from "@/lib/rubricNotes";
 import { requirePageAccess } from "@/lib/auth/pageAccess";
 import { getLibraryDetail, type LibraryDetail } from "@/lib/rubricStore";
 
@@ -41,7 +41,7 @@ export default async function RubricDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="flex flex-col flex-1 items-center">
-      <main className="flex w-full max-w-3xl flex-col gap-4 px-6 pt-6 pb-16">
+      <main className="flex w-full max-w-5xl flex-col gap-4 px-6 pt-6 pb-16">
         <nav aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <li>
@@ -56,70 +56,25 @@ export default async function RubricDetailPage({ params }: { params: Promise<{ i
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li aria-current="page">{rubric.week}</li>
+            <li aria-current="page" className="font-medium no-underline">
+              {rubric.week}
+            </li>
           </ol>
         </nav>
 
         <HeroCard
-          title={
-            <>
-              <span className="block text-base font-normal text-purple-body">{rubric.week}</span>
-              {rubric.title}
-            </>
-          }
-        >
-          <StatusBadge status={rubric.status} version={rubric.version} admin={admin} onPurple />
-        </HeroCard>
+          eyebrow={rubric.week}
+          aside={<StatusBadge status={rubric.status} version={rubric.version} admin={admin} onPurple />}
+          title={rubric.title}
+          note={admin && rubricSource() === "file" ? FILE_SOURCE_NOTE : undefined}
+        />
 
-        {!admin && (
-          <p className="text-sm text-ink-2">Read-only. You can view this rubric but not change it.</p>
-        )}
-        {admin && rubricSource() === "file" && (
-          <p role="note" className="rounded-[10px] border-2 border-surface-border px-4 py-3 text-sm">
-            Editing needs RUBRIC_SOURCE=supabase
-          </p>
-        )}
+        {!admin && <p className="text-sm text-ink-2">Read-only. You can view this rubric but not change it.</p>}
 
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem]">
-          <div className="flex min-w-0 flex-col gap-4">
-            <AppCard title="What the learner does">
-              <p className={BODY}>{rubric.overview}</p>
-            </AppCard>
-            <AppCard title="What earns a 3">
-              <p className={BODY}>{rubric.requirements}</p>
-            </AppCard>
-            <AppCard title="What earns a 4">
-              <p className={BODY}>{rubric.stretchGoal}</p>
-            </AppCard>
-            <AppCard
-              title="Band descriptions"
-              helper={usesGenericBands ? "This assignment uses the generic policy bands." : undefined}
-            >
-              <Tabs defaultValue="band-0">
-                <TabsList aria-label="Band" className="h-auto w-full flex-wrap justify-start gap-2 bg-transparent p-0">
-                  {bands.map((_, i) => (
-                    <TabsTrigger
-                      key={i}
-                      value={`band-${i}`}
-                      className="h-10 min-w-16 flex-none rounded-[10px] border-2 border-border bg-transparent px-3 text-base text-foreground data-active:border-primary-edge data-active:bg-primary data-active:text-primary-foreground"
-                    >
-                      Band {i}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {bands.map((b, i) => (
-                  <TabsContent key={i} value={`band-${i}`} className="pt-2">
-                    <p className={BODY}>{stripBandNumber(b)}</p>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </AppCard>
-            {/* Prompt 3: the history timeline and the editing controls for admins go here. Nothing is rendered yet. */}
-          </div>
-
-          <aside aria-label="Details" className="md:self-start">
+        <div className="grid gap-4 min-[900px]:grid-cols-[minmax(0,1fr)_260px] min-[900px]:gap-x-6">
+          <aside aria-label="Details" className="min-[900px]:sticky min-[900px]:top-6 min-[900px]:col-start-2 min-[900px]:row-start-1 min-[900px]:self-start">
             <SummaryCard heading="Details" showHeading>
-              <dl className="flex flex-col gap-2 text-sm">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm min-[900px]:grid-cols-1">
                 <div>
                   <dt className="font-semibold">Course</dt>
                   <dd>{rubric.courseName}</dd>
@@ -147,6 +102,35 @@ export default async function RubricDetailPage({ params }: { params: Promise<{ i
               </dl>
             </SummaryCard>
           </aside>
+
+          <div className="flex min-w-0 flex-col gap-4 min-[900px]:col-start-1 min-[900px]:row-start-1">
+            <AppCard title="What the learner does">
+              <p className={BODY}>{rubric.overview}</p>
+            </AppCard>
+            <AppCard title="What earns a 3">
+              <p className={BODY}>{rubric.requirements}</p>
+            </AppCard>
+            <AppCard title="What earns a 4">
+              <p className={BODY}>{rubric.stretchGoal}</p>
+            </AppCard>
+            <AppCard
+              title="Band descriptions"
+              helper={usesGenericBands ? "This assignment uses the generic policy bands." : undefined}
+            >
+              <ol className="flex flex-col gap-3">
+                {bands.map((b, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-brand-secondary dark:bg-brand-secondary dark:text-brand-primary">
+                      <span className="sr-only">Band </span>
+                      {i}
+                    </span>
+                    <p className={`${BODY} min-w-0 flex-1 pt-0.5`}>{stripBandNumber(b)}</p>
+                  </li>
+                ))}
+              </ol>
+            </AppCard>
+            {/* Prompt 3: the history timeline and the editing controls for admins go here. Nothing is rendered yet. */}
+          </div>
         </div>
       </main>
     </div>

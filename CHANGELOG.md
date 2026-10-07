@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Library polish
+
+- The rubric carousel can be dragged with a mouse (touch, trackpad and keyboard stay native), its scrollbar is hidden, and Previous and Next disable at the ends. `color-scheme` now follows the theme, so native controls match.
+- Detail page: band descriptions are a numbered list instead of tabs, a tidier two-column layout from 900px, and the admin note is plain language inside the hero card (no environment variable names in the interface).
+- Checks: `npm run build` (routes dynamic), `tsc` and lint. Not yet looked at in a browser.
+
 ## 2026-10-07: Rubric library and read-only detail pages
 
 - New `/rubrics` (course rows with scrolling assignment cards, search, admin status filters) and `/rubrics/[id]` (read-only detail with band tabs) for every signed-in user. Markers see live rubrics only, enforced by reading with their own session (row-level security) plus a server-side filter; admins see every status.
