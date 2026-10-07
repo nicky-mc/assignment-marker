@@ -155,23 +155,24 @@ function CourseRow({ courseId, name, items, all, admin, canEdit }: { courseId: s
           </Button>
         </div>
       </div>
-      {/* A horizontally scrolling row. Native scrolling and scroll-snap keep swipe, trackpad and keyboard working;
-          mouse drag is added by useDragScroll. Padding and scroll-padding keep the focus ring from being clipped. */}
+      {/* A horizontally scrolling row that scrolls freely (no scroll-snap). Native scrolling keeps swipe, trackpad and keyboard
+          working; mouse drag from anywhere, with a glide, is added by useDragScroll. Padding and scroll-padding keep the focus
+          ring from being clipped. */}
       <div
         ref={scroller}
         role="region"
         aria-label={`${name} assignments`}
         tabIndex={0}
-        className="scroll-row -mx-2 snap-x snap-proximity overflow-x-auto scroll-smooth px-2 pt-2 pb-3 [scroll-padding-inline:0.5rem] motion-reduce:scroll-auto"
+        className="scroll-row -mx-2 overflow-x-auto px-2 pt-2 pb-3 [scroll-padding-inline:0.5rem]"
       >
         <ul className="flex gap-4">
           {items.map((item) => (
-            <li key={item.id} className="w-64 shrink-0 snap-start sm:w-72">
+            <li key={item.id} className="w-64 shrink-0 sm:w-72">
               <RubricCard item={item} admin={admin} />
             </li>
           ))}
           {canEdit && (
-            <li className="w-64 shrink-0 snap-start sm:w-72">
+            <li className="w-64 shrink-0 sm:w-72">
               <AddAssignmentCard courseId={courseId} courseName={name} />
             </li>
           )}
