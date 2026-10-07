@@ -15,6 +15,7 @@ import { suggestRubricId } from "@/lib/rubricAdmin/slug";
 import { LIMITS, validateRubric } from "@/lib/rubricAdmin/validate";
 import { cn } from "@/lib/utils";
 import AutoTextarea from "./AutoTextarea";
+import RubricMoreMenu from "./RubricMoreMenu";
 import StatusActionDialog from "./StatusActionDialog";
 import TryDraftSheet from "./TryDraftSheet";
 
@@ -42,6 +43,8 @@ export interface EditorProps {
   draftVersion: number | null;
   shownStatus: "approved" | "draft" | "retired";
   shownVersion: number;
+  /** Admins only: this rubric has been live at some point (Delete then needs the id typed). */
+  everLive?: boolean;
   admin: boolean;
   /** Editing controls exist only for admins reading rubrics from the database. Decided on the server. */
   canEdit: boolean;
@@ -305,6 +308,7 @@ export default function RubricEditor(props: EditorProps) {
       >
         Export
       </a>
+      <RubricMoreMenu rubricId={props.rubricId} title={values.title || baseline.title} liveVersion={liveVersion} everLive={Boolean(props.everLive)} triggerClassName={ON_PURPLE_SECONDARY} />
     </>
   ) : undefined;
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AppCard } from "./AppCard";
+import CourseMenu from "./admin/CourseMenu";
 import { StatusBadge } from "./StatusBadge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -129,6 +130,7 @@ function CourseRow({ courseId, name, items, all, admin, canEdit }: { courseId: s
           <p className="text-[13px] text-ink-2">{counts}</p>
         </div>
         <div className="flex gap-2">
+          {canEdit && <CourseMenu courseId={courseId} courseName={name} hasRubrics={all.length > 0} />}
           <Button
             type="button"
             variant="outline"
