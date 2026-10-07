@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07: Rubric library and read-only detail pages
+
+- New `/rubrics` (course rows with scrolling assignment cards, search, admin status filters) and `/rubrics/[id]` (read-only detail with band tabs) for every signed-in user. Markers see live rubrics only, enforced by reading with their own session (row-level security) plus a server-side filter; admins see every status.
+- `rubricStore` gained `listLibrary` and `getLibraryDetail`; `/admin/rubrics` now redirects admins to `/rubrics`; the menu has "Rubric library" for everyone. Editing controls arrive in the next update.
+- Checks: `npm run build` (routes dynamic), `tsc` and lint. Not yet looked at in a browser.
+
 ## 2026-10-07: Design system (presentation only)
 
 - shadcn/ui (Base UI, Tailwind v4) with softer light and dark tokens in `app/globals.css`, no pure white anywhere, fields dark in dark mode, and shared `AppCard`, `HeroCard` and `SummaryCard`. The marking page is now four step cards plus a summary card and marker and learner cards.

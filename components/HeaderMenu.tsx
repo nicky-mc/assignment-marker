@@ -14,9 +14,11 @@ export default async function HeaderMenu() {
   if (access.status !== "ok") return null;
 
   const authOn = authMode() === "on";
-  const links: MenuLink[] = [{ href: "/", label: "Mark" }];
-  // Only pages that exist: the rubric library is /admin/rubrics. There is no "Manage users" page yet.
-  if (authOn && access.role === "admin") links.push({ href: "/admin/rubrics", label: "Rubric library" });
+  // Only pages that exist. "Manage users" (admins) is added when /admin/users exists.
+  const links: MenuLink[] = [
+    { href: "/", label: "Mark" },
+    { href: "/rubrics", label: "Rubric library" },
+  ];
 
   return <AppMenu email={authOn ? access.email : null} role={authOn ? access.role : null} links={links} canSignOut={authOn} />;
 }

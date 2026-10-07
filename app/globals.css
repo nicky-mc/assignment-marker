@@ -28,6 +28,8 @@
   --primary-edge: #3f1046; /* border on primary buttons */
   --hover: #e6dcea;
   --danger: #a3201a;
+  --draft-bg: #ffe8a3;
+  --draft-ink: #5a3a00;
 
   /* Purple cards, the same in both modes */
   --purple-title: #2ad385;
@@ -137,6 +139,8 @@
   --color-primary-edge: var(--primary-edge);
   --color-hover: var(--hover);
   --color-danger: var(--danger);
+  --color-draft: var(--draft-bg);
+  --color-draft-ink: var(--draft-ink);
   --color-purple-title: var(--purple-title);
   --color-purple-body: var(--purple-body);
 
