@@ -256,12 +256,14 @@
     }
   }
 
-  /* A horizontally scrolling row (the rubric carousel): no scrollbar in any browser or mode, mouse drag with a
-     grab cursor, and snap switched off while dragging. The Previous and Next buttons are the visible control. */
+  /* A horizontally scrolling row (the rubric carousel): no scrollbar in any browser or mode, free scrolling (no
+     scroll-snap), mouse drag from anywhere with a grab cursor. The Previous and Next buttons are the visible control. */
   .scroll-row {
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
+    user-select: none;
+    scroll-behavior: auto;
   }
   .scroll-row::-webkit-scrollbar {
     display: none;
@@ -269,11 +271,9 @@
   .scroll-row a {
     -webkit-user-drag: none;
   }
-  .scroll-row[data-dragging="true"] {
+  .scroll-row[data-dragging="true"],
+  .scroll-row[data-dragging="true"] a {
     cursor: grabbing;
-    scroll-snap-type: none !important;
-    scroll-behavior: auto !important;
-    user-select: none;
   }
 
   /* A purple card: green titles and labels, light purple body text, fields with a green 1.5px border. */
