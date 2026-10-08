@@ -7,6 +7,9 @@ export const COURSES: Course[] = [
   { id: "ai-literacy", name: "AI Literacy" },
   { id: "digital-marketing-ai", name: "Digital Marketing with AI" },
   { id: "di", name: "Digital Innovators" },
+  { id: "build", name: "Build" },
+  { id: "brand", name: "Brand" },
+  { id: "balance", name: "Balance" },
 ];
 
 export interface Rubric {
@@ -19,7 +22,13 @@ export interface Rubric {
   stretchGoal: string;
   /** Per-assignment band descriptions, when they differ meaningfully from the generic policy bands. */
   bandDescriptions?: string[];
+  /** How the work is graded. Missing means "banded" (a 0 to 4 mark). "complete" is a complete / not complete checklist. */
+  gradingMode?: GradingMode;
+  /** The things a complete submission must do. Used only when gradingMode is "complete". */
+  checklist?: string[];
 }
+
+export type GradingMode = "banded" | "complete";
 
 export const BAND_DESCRIPTIONS = [
   "0 - Not attempted or non-functional",

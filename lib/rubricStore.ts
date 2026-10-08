@@ -3,7 +3,7 @@
 //   file     reads lib/rubrics.ts, exactly as before (the default, and the seed for the database)
 //   supabase reads approved rubrics from the database as the signed-in user (Row Level Security)
 // There is deliberately no fallback from supabase to file: if the database is unreachable, it throws.
-import { BAND_DESCRIPTIONS, COURSES, RUBRICS, type Course, type Rubric } from "./rubrics";
+import { BAND_DESCRIPTIONS, COURSES, RUBRICS, type Course, type GradingMode, type Rubric } from "./rubrics";
 import { authMode, rubricSource } from "./auth/config";
 import { createSupabaseServerClient } from "./auth/supabaseServer";
 
@@ -21,6 +21,8 @@ export interface LibraryItem {
   week: string;
   title: string;
   overview: string;
+  /** "complete" shows a Complete / Not complete badge on the card. */
+  gradingMode: GradingMode;
   /** The version shown: the live one if there is one, otherwise the latest draft, otherwise the latest retired. */
   status: "approved" | "draft" | "retired";
   version: number;
@@ -37,6 +39,8 @@ export interface LibraryDetail extends LibraryItem {
   /** Per-assignment band descriptions, or undefined when the generic policy bands apply. */
   bandDescriptions?: string[];
   genericBands: string[];
+  /** The checklist, in complete mode only. */
+  checklist?: string[];
   source: RubricSourceName;
 }
 
@@ -59,6 +63,7 @@ function fileItem(r: Rubric): LibraryItem {
     week: r.week,
     title: r.title,
     overview: r.overview,
+    gradingMode: r.gradingMode ?? "banded",
     status: "approved",
     version: 1,
     hasDraft: false,
@@ -80,6 +85,7 @@ const fileStore: RubricStore = {
       stretchGoal: r.stretchGoal,
       bandDescriptions: r.bandDescriptions,
       genericBands: BAND_DESCRIPTIONS,
+      ...(r.gradingMode === "complete" ? { checklist: r.checklist ?? [] } : {}),
       source: "file",
     };
   },
@@ -88,7 +94,8 @@ const fileStore: RubricStore = {
     return r && { ...r, version: 1, source: "file" };
   },
   async listCourses() {
-    return COURSES;
+    // Like the database source, a course appears only once it has a rubric (an empty course cannot be marked against).
+    return COURSES.filter((c) => RUBRICS.some((r) => r.courseId === c.id));
   },
   async listRubrics(courseId) {
     return RUBRICS.filter((r) => !courseId || r.courseId === courseId).map((r) => ({ ...r, version: 1, source: "file" as const }));
@@ -105,12 +112,14 @@ interface RubricRow {
   requirements: string;
   stretch_goal: string;
   band_descriptions: string[] | null;
+  grading_mode?: GradingMode;
+  checklist?: string[] | null;
   version: number;
   organisation?: string;
   status?: "draft" | "approved" | "retired";
 }
 
-const COLUMNS = "id, course_id, course_name, week, title, overview, requirements, stretch_goal, band_descriptions, version";
+const COLUMNS = "id, course_id, course_name, week, title, overview, requirements, stretch_goal, band_descriptions, grading_mode, checklist, version";
 
 function fromRow(row: RubricRow): StoredRubric {
   return {
@@ -122,6 +131,8 @@ function fromRow(row: RubricRow): StoredRubric {
     requirements: row.requirements,
     stretchGoal: row.stretch_goal,
     ...(row.band_descriptions ? { bandDescriptions: row.band_descriptions } : {}),
+    gradingMode: row.grading_mode ?? "banded",
+    ...(row.grading_mode === "complete" ? { checklist: row.checklist ?? [] } : {}),
     version: row.version,
     source: "database",
   };
@@ -173,6 +184,7 @@ function toItems(rows: RubricRow[]): { item: LibraryItem; row: RubricRow }[] {
         week: primary.week,
         title: primary.title,
         overview: primary.overview,
+        gradingMode: primary.grading_mode ?? "banded",
         status: primary.status ?? "approved",
         version: primary.version,
         hasDraft: Boolean(draft),
@@ -196,6 +208,7 @@ const supabaseStore: RubricStore = {
       stretchGoal: found.row.stretch_goal,
       bandDescriptions: found.row.band_descriptions ?? undefined,
       genericBands: BAND_DESCRIPTIONS,
+      ...(found.row.grading_mode === "complete" ? { checklist: found.row.checklist ?? [] } : {}),
       source: "database",
     };
   },

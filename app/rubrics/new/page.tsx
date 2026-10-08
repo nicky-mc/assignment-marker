@@ -30,7 +30,7 @@ export default async function NewRubricPage({ searchParams }: { searchParams: Pr
           rubricId=""
           courseId={found.id}
           courseName={found.name}
-          baseline={{ week: "", title: "", overview: "", requirements: "", stretchGoal: "", bands: ["", "", "", "", ""] }}
+          baseline={{ week: "", title: "", overview: "", requirements: "", stretchGoal: "", gradingMode: "banded", checklist: [], bands: ["", "", "", "", ""] }}
           liveVersion={null}
           draftVersion={null}
           shownStatus="draft"

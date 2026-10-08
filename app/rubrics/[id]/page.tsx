@@ -102,6 +102,8 @@ export default async function RubricDetailPage({
       overview: working.overview,
       requirements: working.requirements,
       stretchGoal: working.stretch_goal,
+      gradingMode: working.grading_mode ?? "banded",
+      checklist: working.grading_mode === "complete" ? (working.checklist ?? []) : [],
       bands: working.band_descriptions ? working.band_descriptions.map(stripBandPrefix) : ["", "", "", "", ""],
     };
     const rows: Details = [
@@ -154,6 +156,8 @@ export default async function RubricDetailPage({
     overview: rubric.overview,
     requirements: rubric.requirements,
     stretchGoal: rubric.stretchGoal,
+    gradingMode: rubric.gradingMode,
+    checklist: rubric.checklist ?? [],
     bands: rubric.bandDescriptions ? rubric.bandDescriptions.map(stripBandPrefix) : ["", "", "", "", ""],
   };
   const rows: Details = [

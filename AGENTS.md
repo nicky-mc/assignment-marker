@@ -28,6 +28,8 @@ Admins manage rubrics at `/admin/rubrics` (create, edit, import and export JSON,
 
 Rendering and hosting: every page or route that calls `requirePageAccess` or `requireAdmin` must be dynamic (they await `connection()`), so check the route list at the end of `npm run build` shows `ƒ`, not `○`. `NEXT_PUBLIC_` variables are inlined at build time, so set them in the host before building; server-only variables (`AUTH_MODE`, `RUBRIC_SOURCE`, the secret key, the Anthropic key) are read at runtime.
 
+Grading modes: a rubric is `banded` (0 to 4) or `complete` (complete / not complete with a `checklist`); missing means banded. Complete mode ignores band descriptions and the stretch goal, and `/api/mark` refuses it until the marking prompt for it exists. Column mapping for the database is `rubricColumns` in `lib/rubricAdmin/store.ts`; round trip check is `scripts/check-rubric-roundtrip.ts`.
+
 # Design system
 
 Tokens live in `app/globals.css` (light and dark, set once; shadcn's tokens are mapped onto them). Tailwind names: `bg-page`, `bg-surface` + `border-surface-border`, `bg-field` + `border-field-border`, `text-ink`, `text-ink-2`, `text-placeholder`, `text-danger`, `bg-brand-primary` (purple #3F1046), `bg-brand-secondary` (green #2AD385).

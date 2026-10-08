@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Alert from "@/components/Alert";
 import { AppCard } from "@/components/AppCard";
@@ -10,6 +11,7 @@ import { HeroCard } from "@/components/HeroCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { saveRubricAction } from "@/lib/rubricAdmin/actions";
 import { EMPTY_STATE, type FormState } from "@/lib/rubricAdmin/formState";
 import { suggestRubricId } from "@/lib/rubricAdmin/slug";
@@ -20,9 +22,13 @@ import RubricMoreMenu from "./RubricMoreMenu";
 import StatusActionDialog from "./StatusActionDialog";
 import TryDraftSheet from "./TryDraftSheet";
 
-type BlockKey = "title" | "overview" | "requirements" | "stretchGoal" | "bands";
-const ALL_BLOCKS: BlockKey[] = ["title", "overview", "requirements", "stretchGoal", "bands"];
-const EDIT_ALL: BlockKey[] = ["title", "overview", "requirements", "stretchGoal"];
+type BlockKey = "title" | "mode" | "overview" | "requirements" | "stretchGoal" | "bands" | "checklist";
+type GradingMode = "banded" | "complete";
+// Which blocks exist depends on the grading mode: banded has a stretch goal and band descriptions, complete has a checklist.
+const blocksFor = (mode: GradingMode): BlockKey[] =>
+  mode === "complete" ? ["title", "mode", "overview", "requirements", "checklist"] : ["title", "mode", "overview", "requirements", "stretchGoal", "bands"];
+const editAllFor = (mode: GradingMode): BlockKey[] => blocksFor(mode).filter((k) => k !== "bands");
+const MODE_LABEL: Record<GradingMode, string> = { banded: "Banded (0 to 4)", complete: "Complete or not complete" };
 
 export interface EditorValues {
   week: string;
@@ -30,6 +36,9 @@ export interface EditorValues {
   overview: string;
   requirements: string;
   stretchGoal: string;
+  gradingMode: GradingMode;
+  /** The checklist, used in complete mode only. */
+  checklist: string[];
   /** Five texts for bands 0 to 4, WITHOUT the "N - " prefix (the existing action adds it). Empty strings when generic bands apply. */
   bands: string[];
 }
@@ -76,7 +85,7 @@ export default function RubricEditor(props: EditorProps) {
   const { mode, courseId, courseName, baseline, liveVersion, draftVersion, admin, canEdit, genericBands } = props;
   const router = useRouter();
   const [values, setValues] = useState<EditorValues>(baseline);
-  const [open, setOpen] = useState<Set<BlockKey>>(() => (mode === "create" ? new Set(ALL_BLOCKS) : new Set()));
+  const [open, setOpen] = useState<Set<BlockKey>>(() => (mode === "create" ? new Set(blocksFor(baseline.gradingMode)) : new Set()));
   const [id, setId] = useState(props.rubricId);
   const [idTouched, setIdTouched] = useState(false);
   const [ack, setAck] = useState(false);
@@ -88,14 +97,24 @@ export default function RubricEditor(props: EditorProps) {
   const errors = state.errors ?? {};
   const set = <K extends keyof EditorValues>(k: K, v: EditorValues[K]) => setValues((p) => ({ ...p, [k]: v }));
 
+  const isComplete = values.gradingMode === "complete";
+  const visibleBlocks = blocksFor(values.gradingMode);
   const changed = (k: BlockKey) =>
-    k === "bands" ? !sameBands(values.bands, baseline.bands) : k === "title" ? values.title !== baseline.title || values.week !== baseline.week : values[k] !== baseline[k];
+    k === "bands"
+      ? !sameBands(values.bands, baseline.bands)
+      : k === "checklist"
+        ? !sameBands(values.checklist, baseline.checklist)
+        : k === "mode"
+          ? values.gradingMode !== baseline.gradingMode
+          : k === "title"
+            ? values.title !== baseline.title || values.week !== baseline.week
+            : values[k] !== baseline[k];
   const dirty =
     mode === "create"
-      ? Boolean(values.week || values.title || values.overview || values.requirements || values.stretchGoal || values.bands.some(Boolean))
+      ? Boolean(values.week || values.title || values.overview || values.requirements || values.stretchGoal || values.bands.some(Boolean) || values.checklist.some(Boolean) || changed("mode"))
       : Array.from(open).some(changed);
 
-  const changedCount = (mode === "create" ? ALL_BLOCKS : Array.from(open)).filter(changed).length;
+  const changedCount = (mode === "create" ? visibleBlocks : Array.from(open).filter((k) => visibleBlocks.includes(k))).filter(changed).length;
 
   // The same rules the server applies, so warnings show next to the field as you type.
   const warnings = useMemo(
@@ -109,12 +128,15 @@ export default function RubricEditor(props: EditorProps) {
         overview: values.overview || "x",
         requirements: values.requirements || "x",
         stretchGoal: values.stretchGoal || "x",
+        gradingMode: values.gradingMode,
         bandDescriptions: values.bands.some((b) => b.trim()) ? values.bands.map((b, i) => (b.trim() ? `${i} - ${b.trim()}` : "")) : undefined,
+        checklist: values.checklist.filter((t) => t.trim()),
       }).warnings,
     [effectiveId, courseId, courseName, values],
   );
   const needsAck = warnings.length > 0;
-  const blockOf = (field: string): BlockKey => (field.startsWith("bandDescriptions") ? "bands" : field === "week" || field === "title" ? "title" : (field as BlockKey));
+  const blockOf = (field: string): BlockKey =>
+    field.startsWith("bandDescriptions") ? "bands" : field.startsWith("checklist") ? "checklist" : field === "week" || field === "title" ? "title" : (field as BlockKey);
   const warningsFor = (k: BlockKey) => (open.has(k) ? warnings.filter((w) => blockOf(w.field) === k) : []);
 
   // Warn before leaving with unsaved changes: closing the tab, and clicking links inside the app.
@@ -169,8 +191,11 @@ export default function RubricEditor(props: EditorProps) {
     fd.set("title", values.title);
     fd.set("overview", values.overview);
     fd.set("requirements", values.requirements);
-    fd.set("stretchGoal", values.stretchGoal);
-    values.bands.forEach((b, i) => fd.set(`band${i}`, b)); // the existing action adds "N - " when it is missing
+    fd.set("gradingMode", values.gradingMode);
+    // A complete / not complete rubric has no stretch goal or bands; the checklist travels as a JSON list, blank rows dropped.
+    fd.set("stretchGoal", isComplete ? "" : values.stretchGoal);
+    values.bands.forEach((b, i) => fd.set(`band${i}`, isComplete ? "" : b)); // the existing action adds "N - " when it is missing
+    fd.set("checklist", JSON.stringify(isComplete ? values.checklist.map((t) => t.trim()).filter(Boolean) : []));
     if (ack) fd.set("acknowledged", "yes");
     startTransition(async () => {
       // On success the action redirects to the rubric page with a message, which replaces this page.
@@ -182,6 +207,12 @@ export default function RubricEditor(props: EditorProps) {
   }
 
   const editing = canEdit && open.size > 0;
+  const setChecklist = (next: string[]) => set("checklist", next);
+  const moveItem = (i: number, by: -1 | 1) => {
+    const next = [...values.checklist];
+    [next[i], next[i + by]] = [next[i + by], next[i]];
+    setChecklist(next);
+  };
   const fieldError = (key: string) => errors[key];
 
   const counter = (len: number, limit: number, id: string) => (
@@ -208,7 +239,7 @@ export default function RubricEditor(props: EditorProps) {
     );
   };
 
-  const textBlock = (k: Exclude<BlockKey, "title" | "bands">, title: string, limit: number) => {
+  const textBlock = (k: Extract<BlockKey, "overview" | "requirements" | "stretchGoal">, title: string, limit: number) => {
     const o = canEdit && open.has(k);
     const fid = `field-${k}`;
     const err = fieldError(k);
@@ -259,13 +290,15 @@ export default function RubricEditor(props: EditorProps) {
 
   const titleOpen = canEdit && open.has("title");
   const bandsOpen = canEdit && open.has("bands");
+  const modeOpen = canEdit && open.has("mode");
+  const checklistOpen = canEdit && open.has("checklist");
   const usesGeneric = values.bands.every((b) => !b.trim());
   const shownBands = usesGeneric ? genericBands : values.bands;
 
   const heroActions = canEdit && mode === "view" ? (
     <>
-      {!EDIT_ALL.every((k) => open.has(k)) && (
-        <Button type="button" variant="outline" size="sm" className={ON_PURPLE_SECONDARY} onClick={() => openBlocks(EDIT_ALL)}>
+      {!editAllFor(values.gradingMode).every((k) => open.has(k)) && (
+        <Button type="button" variant="outline" size="sm" className={ON_PURPLE_SECONDARY} onClick={() => openBlocks(editAllFor(values.gradingMode))}>
           Edit all
         </Button>
       )}
@@ -461,11 +494,157 @@ export default function RubricEditor(props: EditorProps) {
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4 min-[900px]:col-start-1 min-[900px]:row-start-1">
-          {textBlock("overview", "What the learner does", LIMITS.overview)}
-          {textBlock("requirements", "What earns a 3", LIMITS.requirements)}
-          {textBlock("stretchGoal", "What earns a 4", LIMITS.stretchGoal)}
-
           <AppCard
+            title={
+              modeOpen ? (
+                <span className="flex flex-wrap items-center gap-2">
+                  <label htmlFor="field-grading-mode">Grading mode</label>
+                  {changed("mode") && <EditedChip />}
+                </span>
+              ) : (
+                "Grading mode"
+              )
+            }
+            action={
+              canEdit && !modeOpen ? (
+                <Button type="button" variant="outline" size="sm" onClick={() => openBlocks(["mode"])}>
+                  Edit<span className="sr-only"> grading mode</span>
+                </Button>
+              ) : undefined
+            }
+            helper={
+              isComplete
+                ? "Complete or not complete: the work is checked against the checklist below. There is no 0 to 4 mark, stretch goal or band descriptions."
+                : "Banded: the work is marked 0 to 4 using the band descriptions."
+            }
+          >
+            {modeOpen ? (
+              <>
+                <NativeSelect id="field-grading-mode" value={values.gradingMode} onChange={(e) => set("gradingMode", e.target.value as GradingMode)} aria-invalid={errors.gradingMode ? true : undefined}>
+                  <option value="banded">{MODE_LABEL.banded}</option>
+                  <option value="complete">{MODE_LABEL.complete}</option>
+                </NativeSelect>
+                {errors.gradingMode && (
+                  <p role="alert" className="text-sm font-semibold text-danger">
+                    {errors.gradingMode}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className={BODY}>{MODE_LABEL[values.gradingMode]}</p>
+            )}
+          </AppCard>
+
+          {textBlock("overview", "What the learner does", LIMITS.overview)}
+          {textBlock("requirements", isComplete ? "Requirements" : "What earns a 3", LIMITS.requirements)}
+          {!isComplete && textBlock("stretchGoal", "What earns a 4", LIMITS.stretchGoal)}
+
+          {isComplete && (
+            <AppCard
+              title={
+                checklistOpen && changed("checklist") ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    Checklist
+                    <EditedChip />
+                  </span>
+                ) : (
+                  "Checklist"
+                )
+              }
+              action={
+                canEdit && !checklistOpen ? (
+                  <Button type="button" variant="outline" size="sm" onClick={() => openBlocks(["checklist"])}>
+                    Edit<span className="sr-only"> checklist</span>
+                  </Button>
+                ) : undefined
+              }
+              helper="Everything a complete submission must do. Up to 30 short items."
+            >
+              {checklistOpen ? (
+                <>
+                  {errors.checklist && (
+                    <p role="alert" className="text-sm font-semibold text-danger">
+                      {errors.checklist}
+                    </p>
+                  )}
+                  <ol className="flex flex-col gap-3">
+                    {values.checklist.map((item, i) => {
+                      const fid = `field-checklist-${i}`;
+                      const err = errors[`checklist.${i}`];
+                      return (
+                        <li key={i} className="flex flex-col gap-1">
+                          <div className="flex items-start gap-2">
+                            <span aria-hidden="true" className="mt-2 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-brand-secondary dark:bg-brand-secondary dark:text-brand-primary">
+                              {i + 1}
+                            </span>
+                            <div className="flex min-w-0 flex-1 flex-col gap-1">
+                              <label htmlFor={fid} className="sr-only">
+                                Checklist item {i + 1}
+                              </label>
+                              <Input
+                                id={fid}
+                                value={item}
+                                onChange={(e) => setChecklist(values.checklist.map((x, j) => (j === i ? e.target.value : x)))}
+                                aria-invalid={err ? true : undefined}
+                                aria-describedby={`${fid}-count`}
+                              />
+                              {counter(item.trim().length, LIMITS.checklistItem, `${fid}-count`)}
+                              {err && (
+                                <p role="alert" className="text-sm font-semibold text-danger">
+                                  {err}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 gap-1">
+                              <Button type="button" variant="outline" size="icon-sm" disabled={i === 0} onClick={() => moveItem(i, -1)} aria-label={`Move item ${i + 1} up`}>
+                                <ArrowUp aria-hidden="true" />
+                              </Button>
+                              <Button type="button" variant="outline" size="icon-sm" disabled={i === values.checklist.length - 1} onClick={() => moveItem(i, 1)} aria-label={`Move item ${i + 1} down`}>
+                                <ArrowDown aria-hidden="true" />
+                              </Button>
+                              <Button type="button" variant="outline" size="icon-sm" onClick={() => setChecklist(values.checklist.filter((_, j) => j !== i))} aria-label={`Remove item ${i + 1}`}>
+                                <Trash2 aria-hidden="true" />
+                              </Button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  {values.checklist.length === 0 && <p className="text-sm">No items yet. A complete / not complete rubric needs at least one.</p>}
+                  <div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={values.checklist.length >= LIMITS.checklistItems}
+                      onClick={() => setChecklist([...values.checklist, ""])}
+                    >
+                      <Plus aria-hidden="true" />
+                      Add item
+                    </Button>
+                  </div>
+                  {warningPanel("checklist")}
+                </>
+              ) : values.checklist.length > 0 ? (
+                <ol className="flex flex-col gap-3">
+                  {values.checklist.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-brand-secondary dark:bg-brand-secondary dark:text-brand-primary">
+                        <span className="sr-only">Item </span>
+                        {i + 1}
+                      </span>
+                      <p className={`${BODY} min-w-0 flex-1 pt-0.5`}>{item}</p>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-sm">No checklist items.</p>
+              )}
+            </AppCard>
+          )}
+
+          {!isComplete && <AppCard
             title={
               bandsOpen && changed("bands") ? (
                 <span className="flex flex-wrap items-center gap-2">
@@ -541,7 +720,7 @@ export default function RubricEditor(props: EditorProps) {
                 ))}
               </ol>
             )}
-          </AppCard>
+          </AppCard>}
 
           {props.historySlot}
 

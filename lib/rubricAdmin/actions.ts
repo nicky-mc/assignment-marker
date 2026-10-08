@@ -63,14 +63,24 @@ function readRubricForm(formData: FormData) {
     band2: str(formData, "band2"),
     band3: str(formData, "band3"),
     band4: str(formData, "band4"),
+    gradingMode: str(formData, "gradingMode") === "complete" ? "complete" : "banded",
+    checklist: str(formData, "checklist"),
   };
-  return { values, bands };
+  // The checklist arrives as a JSON list of texts; anything else is treated as no checklist, which validation rejects in complete mode.
+  let checklist: string[] = [];
+  try {
+    const parsed: unknown = JSON.parse(values.checklist || "[]");
+    if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) checklist = parsed.slice(0, 100);
+  } catch {
+    checklist = [];
+  }
+  return { values, bands, checklist };
 }
 
 export async function saveRubricAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const admin = await requireAdmin();
   const mode = str(formData, "mode") === "edit" ? "edit" : "create";
-  const { values, bands } = readRubricForm(formData);
+  const { values, bands, checklist } = readRubricForm(formData);
 
   let courses;
   let existingIds: Set<string> | undefined;
@@ -93,7 +103,9 @@ export async function saveRubricAction(_prev: FormState, formData: FormData): Pr
       overview: values.overview,
       requirements: values.requirements,
       stretchGoal: values.stretchGoal,
+      gradingMode: values.gradingMode,
       bandDescriptions: bands.some(Boolean) ? bands : undefined,
+      checklist,
     },
     { existingIds },
   );

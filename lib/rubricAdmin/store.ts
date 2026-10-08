@@ -18,6 +18,8 @@ export interface RubricRow {
   requirements: string;
   stretch_goal: string;
   band_descriptions: string[] | null;
+  grading_mode: "banded" | "complete";
+  checklist: string[];
   status: "draft" | "approved" | "retired";
   sort_order: number;
   created_by: string | null;
@@ -60,11 +62,15 @@ export function rowToInput(row: RubricRow): RubricInput {
     overview: row.overview,
     requirements: row.requirements,
     stretchGoal: row.stretch_goal,
+    gradingMode: row.grading_mode ?? "banded",
     ...(row.band_descriptions ? { bandDescriptions: row.band_descriptions } : {}),
+    ...(row.grading_mode === "complete" ? { checklist: row.checklist ?? [] } : {}),
   };
 }
 
-function columns(input: RubricInput) {
+/** The database columns for a validated rubric. A complete rubric stores no stretch goal or bands; a banded one stores an empty checklist. */
+export function rubricColumns(input: RubricInput) {
+  const complete = input.gradingMode === "complete";
   return {
     organisation: input.organisation,
     course_id: input.courseId,
@@ -73,8 +79,10 @@ function columns(input: RubricInput) {
     title: input.title,
     overview: input.overview,
     requirements: input.requirements,
-    stretch_goal: input.stretchGoal,
-    band_descriptions: input.bandDescriptions ?? null,
+    stretch_goal: complete ? "" : input.stretchGoal,
+    band_descriptions: complete ? null : (input.bandDescriptions ?? null),
+    grading_mode: complete ? "complete" : "banded",
+    checklist: complete ? (input.checklist ?? []) : [],
   };
 }
 
@@ -155,7 +163,7 @@ export async function createRubric(email: string, input: RubricInput, action: Hi
   await ensureCourse(supabase, email, input);
   const { data, error } = await supabase
     .from("rubrics")
-    .insert({ id: input.id, version: 1, status: "draft", sort_order: await nextSortOrder(supabase), created_by: email, ...columns(input) })
+    .insert({ id: input.id, version: 1, status: "draft", sort_order: await nextSortOrder(supabase), created_by: email, ...rubricColumns(input) })
     .select("*")
     .single();
   if (error || !data) {
@@ -179,7 +187,7 @@ export async function saveNewVersion(email: string, input: RubricInput, action: 
   if (latest.status === "draft") {
     const { data, error } = await supabase
       .from("rubrics")
-      .update(columns(input))
+      .update(rubricColumns(input))
       .eq("id", latest.id)
       .eq("version", latest.version)
       .select("*")
@@ -189,7 +197,7 @@ export async function saveNewVersion(email: string, input: RubricInput, action: 
   } else {
     const { data, error } = await supabase
       .from("rubrics")
-      .insert({ id: latest.id, version: latest.version + 1, status: "draft", sort_order: latest.sort_order, created_by: email, ...columns(input) })
+      .insert({ id: latest.id, version: latest.version + 1, status: "draft", sort_order: latest.sort_order, created_by: email, ...rubricColumns(input) })
       .select("*")
       .single();
     if (error || !data) return fail("save the new draft");

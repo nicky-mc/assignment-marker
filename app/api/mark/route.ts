@@ -70,6 +70,14 @@ export async function POST(request: Request) {
     return Response.json({ error: `Unknown rubricId: ${rubricId}` }, { status: 400 });
   }
 
+  // Complete / not complete rubrics are not markable yet. Refuse clearly here; never fall through to a banded mark.
+  if (rubric.gradingMode === "complete") {
+    return Response.json(
+      { error: "This assignment is graded complete / not complete, which is not supported yet. Nothing was marked." },
+      { status: 501 },
+    );
+  }
+
   try {
     const outcome = await markSubmission(rubric, anonymisedSubmission);
     return Response.json({ ...outcome, rubric: { version: rubric.version, source: rubric.source, ...(wantsDraft ? { draft: true } : {}) } });

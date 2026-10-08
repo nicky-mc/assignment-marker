@@ -26,6 +26,8 @@ async function main() {
     requirements: r.requirements,
     stretch_goal: r.stretchGoal,
     band_descriptions: r.bandDescriptions ?? null,
+    grading_mode: r.gradingMode ?? "banded",
+    checklist: r.gradingMode === "complete" ? (r.checklist ?? []) : [],
     version: 1,
     status: "approved",
     sort_order: i,
