@@ -25,7 +25,10 @@ const URL_RE = /https?:\/\/[^\s<>()"']{1,300}/gi;
 
 // A bare domain such as linkedin.com/in/janedoe, with an optional path.
 const DOMAIN_RE =
-  /\b[a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63}){0,3}\.(?:com|co\.uk|org\.uk|org|net|io|uk|dev|app|me|ai|edu|gov|info|biz|xyz)\b(?:\/[^\s<>()"']{0,200})?/gi;
+  /\b[a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63}){0,3}\.(?:com|co\.uk|org\.uk|org|net|io|uk|dev|app|me|ai|edu|gov|info|biz|xyz|shop|store|blog|online|site|eu)\b(?:\/[^\s<>()"']{0,200})?/gi;
+
+// A bare www. address with any ending: www.sunnysidebakes.bakery, www.example.zzz/menu.
+const WWW_RE = /\bwww\.[a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63}){1,3}(?:\/[^\s<>()"']{0,200})?/gi;
 
 const HANDLE_RE = new RegExp(String.raw`(?<![\w@])@[A-Za-z0-9_]{2,30}\b`, "g");
 
@@ -143,6 +146,7 @@ export function anonymise(raw: string, opts?: AnonymiseOptions): AnonymiseResult
 
   redact(EMAIL_RE, "email");
   redact(URL_RE, "link");
+  redact(WWW_RE, "link");
   redact(DOMAIN_RE, "link");
   redact(HANDLE_RE, "link");
   redact(PHONE_INTL_RE, "phone");

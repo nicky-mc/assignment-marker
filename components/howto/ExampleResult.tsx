@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import ResultCard, { type MarkOutcome } from "@/components/ResultCard";
+import ResultCard from "@/components/ResultCard";
 import { EXAMPLE_RESULT } from "@/content/how-to";
 
 // The real result card, filled with made-up data so people can see how to read one. Nothing is sent anywhere.
@@ -20,7 +20,7 @@ export default function ExampleResult() {
   const [copied, setCopied] = useState(false);
   return (
     <ResultCard
-      result={EXAMPLE_RESULT as unknown as MarkOutcome}
+      result={EXAMPLE_RESULT}
       editableFeedback={text}
       onFeedbackChange={setText}
       aiDraft={draft}

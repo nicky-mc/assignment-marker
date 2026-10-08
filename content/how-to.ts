@@ -16,7 +16,8 @@ export const HOW_TO = {
     },
     {
       title: "Check the names",
-      body: "Before anything is sent, AssisTED hides names, contact details and ID numbers. Add the learner's name so it is hidden too, and look over the suggestions to make sure nothing personal is left.",
+      body: "Before anything is sent, AssisTED hides the names, contact details and ID numbers it recognises. Add the learner's name so it is hidden too, then check the preview for anything personal that is left.",
+      link: { text: 'See "Check what is hidden before you mark" below.', href: "#anon-heading" },
     },
     {
       title: "Mark",
@@ -25,7 +26,7 @@ export const HOW_TO = {
     {
       title: "Read the result",
       body: "There are two parts. Notes for you give the reasoning and the quotes it found in the work. Feedback for the learner is warm, plain and ends with next steps. Edit anything you like before you use it.",
-      note: "Staff will review the evidence and agree or not as appropriate.",
+      note: "Whatever AssisTED suggests, staff review the evidence and agree or not as appropriate.",
     },
   ],
   goodToKnow: [
@@ -37,7 +38,7 @@ export const HOW_TO = {
     { title: "What it cannot see", body: "Links, images, videos and handwriting, and anything inside a Gem or Notebook that was not pasted or attached." },
     {
       title: "Privacy",
-      body: "Learner names and contact details are removed before the work is sent for marking, and AssisTED is designed not to keep submissions, feedback or marks.",
+      body: "AssisTED hides the names and contact details it recognises, and you check the rest before marking. AssisTED is designed not to keep submissions, feedback or marks.",
     },
     { title: "It can be wrong", body: "If something looks off, trust your own judgement and tell the QA team so it can be improved." },
   ],
@@ -118,21 +119,21 @@ export const ANONYMISING = {
     "Hi, I'm Jo Example.",
     "I run Sunny Side Bakery in Westbury and share photos on Instagram as @sunnysidebakes.",
     "My shop is at 14 Mill Lane, BA13 4AA. You can email me at jo@sunnysidebakery.co.uk or ring 07700 900123.",
-    "My neighbour Priya Shah helps on Saturdays, and our menu is at www.sunnysidebakes.shop.",
+    "My neighbour Priya Shah helps on Saturdays, and our menu is at sunnysidebakes.bakery.",
   ].join("\n"),
   // Text the code leaves visible in the example, each with a label shown beside it in the "sends" block.
   missed: [
     { text: "Sunny Side Bakery", label: "business name" },
     { text: "Westbury", label: "town" },
     { text: "Priya Shah", label: "someone else's name" },
-    { text: "www.sunnysidebakes.shop", label: "website" },
+    { text: "sunnysidebakes.bakery", label: "website" },
   ],
   caughtHeading: "What AssisTED hides for you",
   caught: [
     { what: "Names after patterns such as \"Hi, I'm\" or \"My name is\", sign-offs, and lines like \"Name:\". Also any name you add to Names to remove, wherever it appears", placeholder: "[NAME]" },
     { what: "Email addresses", placeholder: "[EMAIL]" },
     { what: "Phone numbers", placeholder: "[PHONE]" },
-    { what: "Web addresses, common website names and @handles", placeholder: "[LINK]" },
+    { what: "Web addresses: anything starting with http or www., and common endings such as .com, .co.uk and .shop. Also @handles", placeholder: "[LINK]" },
     { what: "Street addresses and postcodes", placeholder: "[ADDRESS] [POSTCODE]" },
     { what: "ID numbers, such as National Insurance numbers, sort codes and long account numbers", placeholder: "[ID]" },
     { what: "Business words you choose to redact in the suggestions list", placeholder: "[BUSINESS]" },
@@ -142,7 +143,7 @@ export const ANONYMISING = {
     "Business names that were not added to the form",
     "Towns, cities and other places",
     "Names of other people, such as a neighbour, client or colleague",
-    "Websites with an unusual ending, such as .shop",
+    "Websites written without www. and with an ending it does not know, such as .bakery",
     "A social media handle written without the @",
   ],
   stepsHeading: "How to redact what was missed",
