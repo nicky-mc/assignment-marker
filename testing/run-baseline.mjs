@@ -6,7 +6,7 @@
 //   SKIP=1 node testing/run-baseline.mjs <out.jsonl> <server.log>         runs the rest (skips jobs already done)
 //
 // <server.log> is the file the dev server's output is redirected to. The API response carries no token counts or stop
-// reason, so those are read from the server's usage line ("[marking] ... stop_reason= input_tokens= output_tokens=").
+// reason, so those are read from the server's usage line ("[marking] ... stop_reason= input_tokens= cache_creation_input_tokens= cache_read_input_tokens= output_tokens=").
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -70,11 +70,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function usageSince(offset) {
   for (let t = 0; t < 20; t++) {
     const buf = fs.existsSync(LOG_FILE) ? fs.readFileSync(LOG_FILE, "utf8") : "";
-    const m = /\[marking\] \S+ rubric=\S+ stop_reason=(\S+) input_tokens=(\S+) output_tokens=(\S+)/.exec(buf.slice(offset));
-    if (m) return { stop_reason: m[1], input_tokens: m[2] === "n/a" ? null : Number(m[2]), output_tokens: m[3] === "n/a" ? null : Number(m[3]) };
+    const m = /\[marking\] \S+ rubric=\S+ stop_reason=(\S+) input_tokens=(\S+) cache_creation_input_tokens=(\S+) cache_read_input_tokens=(\S+) output_tokens=(\S+)/.exec(buf.slice(offset));
+    const num = (v) => (v === "n/a" ? null : Number(v));
+    if (m) return { stop_reason: m[1], input_tokens: num(m[2]), cache_creation_input_tokens: num(m[3]), cache_read_input_tokens: num(m[4]), output_tokens: num(m[5]) };
     await sleep(500);
   }
-  return { stop_reason: null, input_tokens: null, output_tokens: null };
+  return { stop_reason: null, input_tokens: null, cache_creation_input_tokens: null, cache_read_input_tokens: null, output_tokens: null };
 }
 
 let parseFailures = 0;
