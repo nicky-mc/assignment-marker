@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AppCard } from "./AppCard";
 import CourseMenu from "./admin/CourseMenu";
 import { StatusBadge } from "./StatusBadge";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useDragScroll } from "./useDragScroll";
@@ -34,6 +35,7 @@ function RubricCard({ item, admin }: { item: LibraryItem; admin: boolean }) {
       <span className="line-clamp-2 text-[13px] text-purple-body">{item.overview}</span>
       <span className="mt-auto flex flex-wrap items-center gap-2 pt-1">
         <StatusBadge status={item.status} version={item.version} admin={admin} onPurple />
+        {item.gradingMode === "complete" && <Badge className="border-[1.5px] border-purple-body bg-transparent text-purple-body">Complete / Not complete</Badge>}
         {admin && item.draftPending && (
           <span className="inline-flex items-center gap-1 text-[12px] text-purple-body">
             <Pencil className="size-3" aria-hidden="true" />

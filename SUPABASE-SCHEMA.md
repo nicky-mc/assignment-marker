@@ -25,6 +25,8 @@
 | `requirements` | `text` |  |
 | `stretch_goal` | `text` |  |
 | `band_descriptions` | `jsonb` |  Nullable |
+| `grading_mode` | `text` |  `banded` (default) or `complete` |
+| `checklist` | `jsonb` |  JSON array; must be non-empty when `grading_mode` is `complete` |
 | `version` | `int4` | Primary |
 | `status` | `text` |  |
 | `sort_order` | `int4` |  |

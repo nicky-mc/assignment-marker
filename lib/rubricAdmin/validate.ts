@@ -2,6 +2,8 @@
 // the import and scripts/check-rubric-validator.ts all use the same rules.
 // Rubric text goes straight into the marking prompt, so it is treated as untrusted input.
 
+import type { GradingMode } from "../rubrics";
+
 export const LIMITS = {
   id: 60,
   courseId: 40,
@@ -13,6 +15,8 @@ export const LIMITS = {
   requirements: 3000,
   stretchGoal: 1500,
   band: 1000,
+  checklistItem: 300,
+  checklistItems: 30,
 } as const;
 
 export interface RubricInput {
@@ -26,6 +30,9 @@ export interface RubricInput {
   requirements: string;
   stretchGoal: string;
   bandDescriptions?: string[];
+  /** Missing means "banded". In "complete" mode the checklist is required and bandDescriptions and stretchGoal are ignored. */
+  gradingMode?: GradingMode;
+  checklist?: string[];
 }
 
 export interface RubricWarning {
@@ -121,10 +128,21 @@ export function validateRubric(raw: unknown, ctx: ValidationContext = {}): Valid
 
   const organisation = checkText(errors, "organisation", "Organisation", r.organisation, LIMITS.organisation, true, false) || DEFAULT_ORGANISATION;
 
+  // Grading mode: missing means banded, so old exports and old rubrics keep working.
+  let gradingMode: GradingMode = "banded";
+  if (r.gradingMode !== undefined && r.gradingMode !== null) {
+    if (r.gradingMode === "banded" || r.gradingMode === "complete") gradingMode = r.gradingMode;
+    else errors.gradingMode = 'Grading mode must be "banded" or "complete".';
+  }
+  const complete = gradingMode === "complete";
+
   const text: Record<string, string> = {};
   for (const f of REQUIRED_TEXT) {
+    // A complete / not complete rubric has no stretch goal.
+    if (complete && f.key === "stretchGoal") continue;
     text[f.key] = checkText(errors, f.key, f.label, r[f.key], LIMITS[f.key], f.oneLine, true);
   }
+  text.stretchGoal ??= "";
 
   if (courseId && text.courseName && !errors.courseId && !errors.courseName) {
     const known = ctx.knownCourses?.get(courseId);
@@ -135,7 +153,7 @@ export function validateRubric(raw: unknown, ctx: ValidationContext = {}): Valid
 
   // Band descriptions: none (generic policy bands are used), or exactly five (bands 0 to 4).
   let bandDescriptions: string[] | undefined;
-  const rawBands = r.bandDescriptions;
+  const rawBands = complete ? undefined : r.bandDescriptions; // ignored in complete mode
   if (rawBands !== undefined && rawBands !== null) {
     if (!Array.isArray(rawBands)) {
       errors.bandDescriptions = "Band descriptions must be a list of five texts, for bands 0 to 4.";
@@ -156,6 +174,31 @@ export function validateRubric(raw: unknown, ctx: ValidationContext = {}): Valid
     }
   }
 
+  // Checklist: required in complete mode (1 to 30 plain one-line items); ignored in banded mode.
+  let checklist: string[] | undefined;
+  if (complete) {
+    const rawList = r.checklist;
+    if (!Array.isArray(rawList)) {
+      errors.checklist = "A complete / not complete rubric needs a checklist: a list of the things a complete submission must do.";
+    } else if (rawList.some((x) => typeof x !== "string")) {
+      errors.checklist = "Each checklist item must be text.";
+    } else if (rawList.length === 0 || rawList.every((x) => !(x as string).trim())) {
+      errors.checklist = "Add at least one checklist item.";
+    } else if (rawList.length > LIMITS.checklistItems) {
+      errors.checklist = `A checklist can have at most ${LIMITS.checklistItems} items.`;
+    } else {
+      const items = (rawList as string[]).map((x) => x.trim());
+      if (items.some((x) => !x)) {
+        errors.checklist = "Remove the empty checklist items.";
+      } else {
+        items.forEach((x, i) => {
+          checkText(errors, `checklist.${i}`, `Checklist item ${i + 1}`, x, LIMITS.checklistItem, true, true);
+        });
+        checklist = items;
+      }
+    }
+  }
+
   const value: RubricInput = {
     id,
     organisation,
@@ -166,7 +209,9 @@ export function validateRubric(raw: unknown, ctx: ValidationContext = {}): Valid
     overview: text.overview,
     requirements: text.requirements,
     stretchGoal: text.stretchGoal,
+    gradingMode,
     ...(bandDescriptions ? { bandDescriptions } : {}),
+    ...(checklist ? { checklist } : {}),
   };
 
   const warnings: RubricWarning[] = [];
@@ -177,6 +222,7 @@ export function validateRubric(raw: unknown, ctx: ValidationContext = {}): Valid
   };
   for (const f of ["title", "overview", "requirements", "stretchGoal", "week", "courseName"] as const) scan(f, value[f]);
   value.bandDescriptions?.forEach((b, i) => scan(`bandDescriptions.${i}`, b));
+  value.checklist?.forEach((b, i) => scan(`checklist.${i}`, b));
 
   const ok = Object.keys(errors).length === 0;
   return { ok, errors, warnings, value: ok ? value : undefined };
@@ -194,7 +240,9 @@ export function toExportShape(r: RubricInput): RubricInput {
     overview: r.overview,
     requirements: r.requirements,
     stretchGoal: r.stretchGoal,
+    gradingMode: r.gradingMode ?? "banded",
     ...(r.bandDescriptions ? { bandDescriptions: r.bandDescriptions } : {}),
+    ...(r.checklist && r.gradingMode === "complete" ? { checklist: r.checklist } : {}),
   };
 }
 
@@ -208,6 +256,7 @@ export const BLANK_TEMPLATE: RubricInput = {
   overview: "One or two sentences describing what the learner is asked to do.",
   requirements: "What a submission needs to include to meet expectations (3 out of 4).",
   stretchGoal: "What a submission would include to exceed expectations (4 out of 4).",
+  gradingMode: "banded",
   bandDescriptions: [
     "0 - Not attempted or no submission.",
     "1 - Attempted but does not show understanding.",

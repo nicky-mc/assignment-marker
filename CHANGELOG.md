@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-08: Complete / not complete rubrics (data model and admin only)
+
+- Rubrics have a grading mode: banded (0 to 4, as before) or complete / not complete with a checklist. A missing mode means banded, so existing rubrics and old JSON exports are unchanged. A complete rubric needs a non-empty checklist (up to 30 plain one-line items) and ignores band descriptions and the stretch goal. Export and import carry both fields.
+- Admin editor: Grading mode selector; in complete mode the stretch goal and band descriptions are hidden and a checklist editor (add, remove, move up or down) appears. Library cards show a Complete / Not complete badge. New empty courses Build, Brand and Balance are in `COURSES` (the file source lists a course only once it has a rubric).
+- `/api/mark` refuses a complete rubric with a clear "not supported yet" message (501) and never returns a banded mark. Marking, scoring and anonymising code are untouched.
+- Needs `supabase/migrations/005_grading_mode.sql` (already run by hand; committed unchanged). Checks: `tsc`, lint, `npm run build`, `scripts/check-rubric-validator.ts` 25 of 25, `scripts/check-rubric-roundtrip.ts` (14 current rubrics identical after export and import). Not run against Supabase or looked at in a browser.
+
 ## 2026-10-07: Staff self sign-up as marker (domain-limited, removal sticks)
 
 - A person who signs in with a verified Google account at an allowed domain (default techeducators.co.uk, exact match only) is added as a marker on first sign-in, by the database function `claim_marker_access()` called from the server. It never creates or changes an admin. Removing a person blocks their email until an admin chooses Allow again or adds them by hand.
