@@ -400,14 +400,14 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.md,.markdown,.pdf,.docx"
+              accept=".txt,.md,.markdown,.pdf,.docx,.csv,.xlsx,.ods"
               className="hidden"
               onChange={handleFileInputChange}
               aria-label="Choose a file to upload"
             />
           </>
         }
-        helper="Accepts .txt, .md, .docx or .pdf, or just paste text directly, e.g. from Google Docs."
+        helper="Accepts .txt, .md, .docx, .pdf, .xlsx, .ods or .csv, or just paste text directly, e.g. from Google Docs."
       >
         {hideOriginal ? (
           <div className="flex min-h-40 flex-col items-start justify-center gap-3 rounded-[10px] border-2 border-dashed border-field-border bg-field px-4 py-6">

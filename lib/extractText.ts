@@ -1,3 +1,5 @@
+import { extractFromSpreadsheet, rejectedSpreadsheetMessage } from "./extractSpreadsheet";
+
 export interface ExtractResult {
   text: string;
   warning?: string;
@@ -6,6 +8,7 @@ export interface ExtractResult {
 }
 
 const PLAIN_TEXT_EXTENSIONS = [".txt", ".md", ".markdown"];
+const SPREADSHEET_EXTENSIONS = [".csv", ".xlsx", ".ods"];
 
 function hasExtension(name: string, ext: string): boolean {
   return name.toLowerCase().endsWith(ext);
@@ -174,15 +177,21 @@ export async function extractTextFromFile(file: File): Promise<ExtractResult> {
     );
   }
 
+  const rejected = rejectedSpreadsheetMessage(name);
+  if (rejected) throw new Error(rejected);
+
   let result: ExtractResult;
-  if (hasExtension(name, ".pdf") || file.type === "application/pdf") {
+  // Spreadsheets go before the plain-text check: browsers report a .csv as text/csv.
+  if (SPREADSHEET_EXTENSIONS.some((ext) => hasExtension(name, ext))) {
+    result = await extractFromSpreadsheet(file);
+  } else if (hasExtension(name, ".pdf") || file.type === "application/pdf") {
     result = await extractFromPdf(file);
   } else if (hasExtension(name, ".docx")) {
     result = await extractFromDocx(file);
   } else if (PLAIN_TEXT_EXTENSIONS.some((ext) => hasExtension(name, ext)) || file.type.startsWith("text/")) {
     result = await extractFromPlainText(file);
   } else {
-    throw new Error("Unsupported file type. Upload a .txt, .md, .docx or .pdf file, or paste the text directly.");
+    throw new Error("Unsupported file type. Upload a .txt, .md, .docx, .pdf, .xlsx, .ods or .csv file, or paste the text directly.");
   }
 
   return { ...result, text: normalizeExtractedText(result.text) };
