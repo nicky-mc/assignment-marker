@@ -140,12 +140,13 @@ export interface MarkOutcome {
   markerNotes: MarkingResult["markerNotes"];
 }
 
-function buildSystemPrompt(rubric: Rubric): string {
-  const bands = rubric.bandDescriptions ?? BAND_DESCRIPTIONS;
+// Prompt caching: the request is a stable prefix and a variable tail, in this order.
+//   1. system block: marking instructions, schema guidance and tone guide (identical for every call). Breakpoint.
+//   2. user block 1: this assignment's band descriptions and rubric (identical for every call on the same rubric). Breakpoint.
+//   3. user block 2: the submission (varies per call). No breakpoint.
+// Nothing that changes between calls (dates, names, ids, the submission) may appear before breakpoint 2.
+function buildSystemPrompt(): string {
   return `You are marking assignments for Tech Educators, following their Assessment Recording and Marking Policy.
-
-Mark on a 0-4 scale, using the band descriptions for this specific assignment:
-${bands.map((b) => `- ${b}`).join("\n")}
 
 Marking approach:
 - Look for reasons to give marks, rather than reasons not to.
@@ -195,11 +196,46 @@ ${anonymisedSubmission}
 Mark this submission against the assignment above.`;
 }
 
+
+// The rubric block: this assignment's band descriptions and requirements. Cached per rubric.
+function buildRubricPrompt(rubric: Rubric): string {
+  const bands = rubric.bandDescriptions ?? BAND_DESCRIPTIONS;
+  return `Mark on a 0-4 scale, using the band descriptions for this specific assignment:
+${bands.map((b) => `- ${b}`).join("\n")}
+
+Assignment: ${rubric.week} - ${rubric.title}
+
+Overview: ${rubric.overview}
+
+Requirements for 3/4 (meets expectations): ${rubric.requirements}
+
+Stretch goal for 4/4: ${rubric.stretchGoal}
+
+`;
+}
+
+// The variable tail: the submission only. No cache breakpoint.
+function buildSubmissionPrompt(anonymisedSubmission: string): string {
+  return `--- Learner submission (anonymised) ---
+${anonymisedSubmission}
+--- end submission ---
+
+Mark this submission against the assignment above.`;
+}
+
 // Usage metadata only: a timestamp, the rubric id, the stop reason and token counts. Never log the
 // submission, the model's reasoning, or any feedback text, and never log an error message.
-function logUsage(rubricId: string, stopReason: string, inputTokens: number | null, outputTokens: number | null) {
+interface UsageCounts {
+  input: number | null;
+  cacheCreation: number | null;
+  cacheRead: number | null;
+  output: number | null;
+}
+
+function logUsage(rubricId: string, stopReason: string, u: UsageCounts) {
+  const n = (v: number | null) => v ?? "n/a";
   console.log(
-    `[marking] ${new Date().toISOString()} rubric=${rubricId} stop_reason=${stopReason} input_tokens=${inputTokens ?? "n/a"} output_tokens=${outputTokens ?? "n/a"}`,
+    `[marking] ${new Date().toISOString()} rubric=${rubricId} stop_reason=${stopReason} input_tokens=${n(u.input)} cache_creation_input_tokens=${n(u.cacheCreation)} cache_read_input_tokens=${n(u.cacheRead)} output_tokens=${n(u.output)}`,
   );
 }
 
@@ -215,15 +251,28 @@ export async function markSubmission(rubric: Rubric, anonymisedSubmission: strin
       effort: "high",
       format: zodOutputFormat(MarkingResultSchema),
     },
-    system: buildSystemPrompt(rubric),
-    messages: [{ role: "user", content: buildUserPrompt(rubric, anonymisedSubmission) }],
+    system: [{ type: "text", text: buildSystemPrompt(), cache_control: { type: "ephemeral" } }],
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: buildRubricPrompt(rubric), cache_control: { type: "ephemeral" } },
+          { type: "text", text: buildSubmissionPrompt(anonymisedSubmission) },
+        ],
+      },
+    ],
   }).catch((err: unknown) => {
     // The SDK threw before returning a response, so there is no stop reason or usage. Log the error class only.
-    logUsage(rubric.id, `none(${err instanceof Error ? err.name : "unknown"})`, null, null);
+    logUsage(rubric.id, `none(${err instanceof Error ? err.name : "unknown"})`, { input: null, cacheCreation: null, cacheRead: null, output: null });
     throw err;
   });
 
-  logUsage(rubric.id, String(response.stop_reason), response.usage.input_tokens, response.usage.output_tokens);
+  logUsage(rubric.id, String(response.stop_reason), {
+    input: response.usage.input_tokens,
+    cacheCreation: response.usage.cache_creation_input_tokens,
+    cacheRead: response.usage.cache_read_input_tokens,
+    output: response.usage.output_tokens,
+  });
 
   if (!response.parsed_output) {
     throw new Error(
