@@ -160,6 +160,7 @@ Marking approach:
 
 Feedback should:
 - Recognise effort and achievement first.
+- If the submission includes a reflection, refer to it in the feedback. A missing reflection never lowers the mark.
 - Explain the mark in relation to the band descriptions.
 - Give two to four next steps, not more (avoid overwhelming the learner).
 - End with brief motivation for future assignments.
