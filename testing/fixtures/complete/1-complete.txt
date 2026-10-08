@@ -1,0 +1,14 @@
+Product brief: StudyBuddy
+
+Who it is for: StudyBuddy is for first-year university students who live in shared houses and struggle to keep a revision routine, such as a student called Priya who works part time.
+
+The problem: Students in shared housing are often interrupted and lose track of what they planned to revise. They end up cramming the night before an exam because nothing reminds them of the plan they made weeks earlier.
+
+Features:
+1. A weekly planner that turns module deadlines into short daily tasks.
+2. A "quiet hours" timer that tells housemates when someone is studying.
+3. A streak counter that shows how many days in a row a student has stuck to the plan.
+
+Why I put the planner first: I chose the weekly planner as the first feature to build because every other feature depends on having a plan. Without it the timer and the streak counter have nothing to measure.
+
+Prototype: https://example.com/studybuddy-prototype

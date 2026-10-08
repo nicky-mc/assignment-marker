@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-08: Marking path for complete / not complete rubrics
+
+- New `lib/markingComplete.ts`, called by `/api/mark` when a rubric's grading mode is complete (replaces the "not supported yet" guard). The model returns per-line checklist evidence (verbatim quote, met, cannotVerify), then reasoning, then feedback and marker notes. The outcome is derived in code: a line counts as met only if its quote is found in the submission (case and whitespace ignored); the work is "complete" if every verifiable line is met, otherwise "not complete"; lines that cannot be checked from the text never cause "not complete" and are listed as needing the marker's check. No score, band, borderline or ceiling.
+- Same model, max_tokens, anonymisation, rate limiting and two-breakpoint caching structure as the banded path; the tone guide is reused unchanged. The banded path (`lib/marking.ts`, `lib/scoring.ts`, `lib/toneGuide.ts`) is untouched.
+- Result card: Complete / Not complete chip, checklist panel with quotes, "Needs your check" list, the usual feedback sections; the copied feedback starts with the outcome.
+- Checks: `scripts/check-marking-complete.ts` (13 offline checks, plus 4 live cases with `LIVE=1`).
+
 ## 2026-10-08: Complete / not complete rubrics (data model and admin only)
 
 - Rubrics have a grading mode: banded (0 to 4, as before) or complete / not complete with a checklist. A missing mode means banded, so existing rubrics and old JSON exports are unchanged. A complete rubric needs a non-empty checklist (up to 30 plain one-line items) and ignores band descriptions and the stretch goal. Export and import carry both fields.
