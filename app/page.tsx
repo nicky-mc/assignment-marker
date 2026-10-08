@@ -6,6 +6,7 @@ import { HeroCard } from "@/components/HeroCard";
 import MarkingForm from "@/components/MarkingForm";
 import { requirePageAccess } from "@/lib/auth/pageAccess";
 import { listCourses, listRubrics } from "@/lib/rubricStore";
+import type { Rubric } from "@/lib/rubrics";
 
 export const metadata: Metadata = { title: "Mark a submission" };
 
@@ -40,11 +41,22 @@ export default async function Home() {
 }
 
 
+// Short ideas for labelling a file or link: the checklist lines for a complete / not complete assignment, otherwise the
+// first few requirements. Rubric text is readable by every signed-in user in the library, so this adds no new exposure.
+function labelSuggestions(r: Rubric): string[] {
+  const source = r.gradingMode === "complete" ? (r.checklist ?? []) : r.requirements.split(/[;.]\s+/);
+  return source
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 8)
+    .map((s) => (s.length > 50 ? `${s.slice(0, 47).trimEnd()}...` : s));
+}
+
 async function loadData() {
   const [courses, rubrics] = await Promise.all([listCourses(), listRubrics()]);
   if (courses.length === 0 || rubrics.length === 0) throw new Error("No approved rubrics found");
   return {
     courses,
-    rubrics: rubrics.map(({ id, courseId, week, title, overview }) => ({ id, courseId, week, title, overview })),
+    rubrics: rubrics.map((r) => ({ id: r.id, courseId: r.courseId, week: r.week, title: r.title, overview: r.overview, labelSuggestions: labelSuggestions(r) })),
   };
 }

@@ -1,6 +1,7 @@
 import { getRubric, RubricStoreError } from "@/lib/rubricStore";
 import { markSubmission } from "@/lib/marking";
 import { markComplete } from "@/lib/markingComplete";
+import { tagQuoteSources } from "@/lib/submissionParts";
 import { getAccess } from "@/lib/auth/access";
 import { checkRateLimit, DRAFT_TRIES_PER_HOUR, MARKS_PER_HOUR } from "@/lib/auth/rateLimit";
 import { getDraftRow, rowToInput } from "@/lib/rubricAdmin/store";
@@ -74,7 +75,8 @@ export async function POST(request: Request) {
   try {
     // Complete / not complete rubrics have their own path; the banded path below is unchanged.
     const outcome = rubric.gradingMode === "complete" ? await markComplete(rubric, anonymisedSubmission) : await markSubmission(rubric, anonymisedSubmission);
-    return Response.json({ ...outcome, rubric: { version: rubric.version, source: rubric.source, ...(wantsDraft ? { draft: true } : {}) } });
+    // Add the part each quote came from, and the links that were not opened. A single unlabelled submission is left as it is.
+    return Response.json({ ...tagQuoteSources(outcome, anonymisedSubmission), rubric: { version: rubric.version, source: rubric.source, ...(wantsDraft ? { draft: true } : {}) } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error while marking";
     return Response.json({ error: message }, { status: 502 });
