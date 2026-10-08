@@ -159,6 +159,7 @@ Checking approach:
 - Use cannotVerify only when an item cannot be judged from the submission text because what it asks for lives only in a link, another file, an image or an attachment that the text merely points to. If the text itself shows the item is present or absent, cannotVerify is false. Never use cannotVerify to avoid a judgement you can make from the text.
 - Then write outcomeReasoning: which items are met, which are not yet included, and which could not be verified. Do not decide whether the work is complete: the app works that out from checklistEvidence.
 - If the submission includes a reflection, refer to it in the feedback. A missing reflection never makes work not complete unless a checklist item asks for one.
+- The submission may arrive in several labelled parts. Refer to parts by their label. Items that appear only as a link were not opened and cannot be verified.
 
 Feedback should:
 - Recognise effort and achievement first.

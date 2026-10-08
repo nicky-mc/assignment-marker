@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { anonymise, suggestTerms, type RedactionCategory } from "@/lib/anonymise";
+import { useEffect, useRef, useState } from "react";
+import { suggestTerms, type RedactionCategory } from "@/lib/anonymise";
 import { extractTextFromFile } from "@/lib/extractText";
-import { Eye, EyeOff, Upload, X } from "lucide-react";
+import { assembleSubmission, cleanLabel, defaultLabelFromFileName, MAX_PARTS, MAX_TOTAL_UPLOAD_BYTES, MAX_LINKS, type SubmissionPart } from "@/lib/submissionParts";
+import { Eye, EyeOff, X } from "lucide-react";
 import { toast } from "sonner";
 import Alert from "./Alert";
 import SegmentedControl from "./SegmentedControl";
+import SubmissionInputs, { type FileEntry, type LinkEntry } from "./SubmissionInputs";
 import ResultCard, { isCompleteResult, type ResultData } from "./ResultCard";
 import { AppCard } from "./AppCard";
 import { Badge } from "./ui/badge";
@@ -117,6 +119,8 @@ export interface RubricOption {
   week: string;
   title: string;
   overview: string;
+  /** Short ideas for labelling a file or link, from the checklist or requirements. */
+  labelSuggestions?: string[];
 }
 
 export default function MarkingForm({ courses, rubrics }: { courses: CourseOption[]; rubrics: RubricOption[] }) {
@@ -144,14 +148,15 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   const [error, setError] = useState<string | null>(null);
   const [editableFeedback, setEditableFeedback] = useState("");
   const [extracting, setExtracting] = useState(false);
-  const [extractError, setExtractError] = useState<string | null>(null);
-  const [extractWarning, setExtractWarning] = useState<string | null>(null);
-  const [extractNotice, setExtractNotice] = useState<string | null>(null);
   const [feedbackCopied, setFeedbackCopied] = useState(false);
   const [previewView, setPreviewView] = useState<"highlighted" | "edit">("highlighted");
   const [hideOriginal, setHideOriginal] = useState(false);
   const [dismissed, setDismissed] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [files, setFiles] = useState<FileEntry[]>([]);
+  const [links, setLinks] = useState<LinkEntry[]>([]);
+  const [pastedLabel, setPastedLabel] = useState("");
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const nextId = useRef(0);
 
   async function handleCopyFeedback() {
     try {
@@ -165,28 +170,55 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
     }
   }
 
-  async function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    setExtracting(true);
-    setExtractError(null);
-    setExtractWarning(null);
-    setExtractNotice(null);
-    try {
-      const { text, warning, notice } = await extractTextFromFile(file);
-      handleSubmissionChange(text);
-      setNames(namesFromFileName(file.name, courses.map((c) => c.name)));
-      setDismissed([]);
-      setTerms([]);
-      if (warning) setExtractWarning(warning);
-      if (notice) setExtractNotice(notice);
-    } catch (err) {
-      setExtractError(err instanceof Error ? err.message : "Could not read that file.");
-    } finally {
-      setExtracting(false);
+  // Adds files (picker or drag and drop). Up to MAX_PARTS files and MAX_TOTAL_UPLOAD_BYTES in all. A file that cannot
+  // be added, or cannot be read, stays visible with the reason: nothing is dropped silently.
+  async function addFiles(incoming: File[]) {
+    if (incoming.length === 0) return;
+    const accepted: File[] = [];
+    const skipped: string[] = [];
+    let slots = MAX_PARTS - files.length;
+    let bytes = files.reduce((n, f) => n + f.size, 0);
+    for (const f of incoming) {
+      if (slots <= 0) skipped.push(`${f.name} (limit of ${MAX_PARTS} files)`);
+      else if (bytes + f.size > MAX_TOTAL_UPLOAD_BYTES) skipped.push(`${f.name} (files together would be over ${MAX_TOTAL_UPLOAD_BYTES / (1024 * 1024)} MB)`);
+      else {
+        accepted.push(f);
+        slots -= 1;
+        bytes += f.size;
+      }
     }
+    setUploadMessage(skipped.length > 0 ? `Not added: ${skipped.join("; ")}.` : null);
+    if (accepted.length === 0) return;
+
+    const entries: FileEntry[] = accepted.map((f) => ({
+      id: `f${nextId.current++}`,
+      fileName: f.name,
+      size: f.size,
+      label: defaultLabelFromFileName(f.name),
+      status: "reading",
+      text: "",
+    }));
+    setFiles((prev) => [...prev, ...entries]);
+    resetPreview();
+    setNames((prev) => Array.from(new Set([...prev, ...accepted.flatMap((f) => namesFromFileName(f.name, courses.map((c) => c.name)))])));
+    setExtracting(true);
+    for (const [i, file] of accepted.entries()) {
+      const id = entries[i].id;
+      try {
+        const { text, warning, notice } = await extractTextFromFile(file);
+        setFiles((prev) => prev.map((e) => (e.id === id ? { ...e, status: "ok", text, warning, notice } : e)));
+      } catch (err) {
+        const error = err instanceof Error ? err.message : "Could not read that file.";
+        setFiles((prev) => prev.map((e) => (e.id === id ? { ...e, status: "failed", error } : e)));
+      }
+    }
+    setExtracting(false);
+  }
+
+  function removeFile(id: string) {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+    setUploadMessage(null);
+    resetPreview();
   }
 
   // Clears the preview, the confirmation tick and the result card, and ignores any mark still in flight.
@@ -207,7 +239,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
 
   function handleAnonymise() {
     resetPreview();
-    const out = anonymise(rawSubmission, { names, terms });
+    const out = assembleSubmission(parts, links, { names, terms });
     setAnonymisedText(out.text);
     setRedactionCount(out.redactionCount);
     setCounts(out.counts);
@@ -223,9 +255,23 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   function handleSubmissionChange(value: string) {
     setRawSubmission(value);
     resetPreview();
-    setExtractError(null);
-    setExtractWarning(null);
-    setExtractNotice(null);
+  }
+
+  function setFileLabel(id: string, label: string) {
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, label } : f)));
+    resetPreview();
+  }
+  function addLink() {
+    setLinks((prev) => (prev.length >= MAX_LINKS ? prev : [...prev, { id: `l${nextId.current++}`, label: "", url: "" }]));
+    resetPreview();
+  }
+  function removeLink(id: string) {
+    setLinks((prev) => prev.filter((l) => l.id !== id));
+    resetPreview();
+  }
+  function changeLink(id: string, patch: Partial<Pick<LinkEntry, "label" | "url">>) {
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+    resetPreview();
   }
 
   function addNames(raw: string) {
@@ -253,15 +299,20 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
 
   const selectedRubric = rubricsForCourse.find((r) => r.id === rubricId) ?? rubricsForCourse[0];
 
+  // The parts that make up the submission: pasted text (if any) then each file that was read. Failed files are shown on
+  // their card but are not part of the submission.
+  const parts: SubmissionPart[] = [
+    ...(rawSubmission.trim() ? [{ label: cleanLabel(pastedLabel) || "Pasted text", text: rawSubmission }] : []),
+    ...files.filter((f) => f.status === "ok").map((f) => ({ label: cleanLabel(f.label) || defaultLabelFromFileName(f.fileName), fileName: f.fileName, text: f.text })),
+  ];
+  const allRawText = parts.map((p) => p.text).join("\n\n");
+  const failedFiles = files.filter((f) => f.status === "failed").length;
+
   // Words in the assignment's own title and overview are not worth flagging, so they are left out of the suggestions.
   const assignmentText = `${selectedRubric.week} ${selectedRubric.title} ${selectedRubric.overview} ${courses.find((c) => c.id === courseId)?.name ?? ""}`;
-  const assignmentWords = useMemo(() => new Set(assignmentText.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)), [assignmentText]);
-  const suggestions = useMemo(
-    () =>
-      suggestTerms(rawSubmission, [...names, ...terms]).filter(
-        (s) => !dismissed.includes(s.term) && !s.term.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).every((w) => assignmentWords.has(w)),
-      ),
-    [rawSubmission, names, terms, dismissed, assignmentWords],
+  const assignmentWords = new Set(assignmentText.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+  const suggestions = suggestTerms(allRawText, [...names, ...terms]).filter(
+    (s) => !dismissed.includes(s.term) && !s.term.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).every((w) => assignmentWords.has(w)),
   );
 
   const markLocked = !hasAnonymised || !confirmedAnonymised || !anonymisedText.trim();
@@ -310,7 +361,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   }
 
   // One-line summaries for collapsed cards. They never include the file name or any of the learner's text.
-  const wordCount = rawSubmission.trim() ? rawSubmission.trim().split(/\s+/).length : 0;
+  const wordCount = allRawText.trim() ? allRawText.trim().split(/\s+/).length : 0;
   const summaries: Record<StepKey, string> = {
     course: `${courses.find((c) => c.id === courseId)?.name ?? ""}, ${selectedRubric.week}: ${selectedRubric.title}`,
     submission: wordCount === 0 ? "No text yet" : `${wordCount.toLocaleString("en-GB")} ${wordCount === 1 ? "word" : "words"}`,
@@ -397,21 +448,9 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
                 {hideOriginal ? "Show original" : "Hide original"}
               </Button>
             )}
-            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={extracting}>
-              <Upload aria-hidden="true" />
-              {extracting ? "Reading file…" : "Upload a file"}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md,.markdown,.pdf,.docx,.csv,.xlsx,.ods"
-              className="hidden"
-              onChange={handleFileInputChange}
-              aria-label="Choose a file to upload"
-            />
           </>
         }
-        helper="Accepts .txt, .md, .docx, .pdf, .xlsx, .ods or .csv, or just paste text directly, e.g. from Google Docs."
+        helper="Add several files (.txt, .md, .docx, .pdf, .xlsx, .ods or .csv), paste text, or both. Label each one so it is clear what is what."
       >
         {hideOriginal ? (
           <div className="flex min-h-40 flex-col items-start justify-center gap-3 rounded-[10px] border-2 border-dashed border-field-border bg-field px-4 py-6">
@@ -424,28 +463,48 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
             </Button>
           </div>
         ) : (
-          <Textarea
-            id="submission"
-            className="min-h-40"
-            placeholder="Paste the learner's submission here..."
-            value={rawSubmission}
-            onChange={(e) => handleSubmissionChange(e.target.value)}
-          />
-        )}
-        {extractError && (
-          <Alert variant="error" title="Could not read that file">
-            {extractError}
-          </Alert>
-        )}
-        {extractWarning && (
-          <Alert variant="warning" title="Check the extracted text">
-            {extractWarning}
-          </Alert>
-        )}
-        {extractNotice && (
-          <Alert variant="warning" title="Tables were read approximately">
-            {extractNotice}
-          </Alert>
+          <>
+            <div className="flex flex-col gap-2">
+              <Textarea
+                id="submission"
+                className="min-h-40"
+                placeholder="Paste the learner's submission here..."
+                value={rawSubmission}
+                onChange={(e) => handleSubmissionChange(e.target.value)}
+              />
+              {rawSubmission.trim() && (files.length > 0 || links.length > 0) && (
+                <div className="flex max-w-sm flex-col gap-1">
+                  <label htmlFor="pasted-label" className="text-sm font-medium">
+                    Label for the pasted text
+                  </label>
+                  <Input
+                    id="pasted-label"
+                    value={pastedLabel}
+                    maxLength={60}
+                    placeholder="Pasted text"
+                    list="label-suggestions"
+                    onChange={(e) => {
+                      setPastedLabel(e.target.value);
+                      resetPreview();
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <SubmissionInputs
+              files={files}
+              links={links}
+              suggestions={selectedRubric.labelSuggestions ?? []}
+              message={uploadMessage}
+              extracting={extracting}
+              onAddFiles={addFiles}
+              onRemoveFile={removeFile}
+              onFileLabel={setFileLabel}
+              onAddLink={addLink}
+              onRemoveLink={removeLink}
+              onLinkChange={changeLink}
+            />
+          </>
         )}
       </AppCard>
 
@@ -496,7 +555,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
           )}
         </div>
 
-        {rawSubmission.trim() && (
+        {allRawText.trim() && (
           <div className="flex flex-col gap-2">
             <h3 className="font-heading font-semibold">Check before marking</h3>
             <p className="text-[13px] text-ink-2">
@@ -552,8 +611,14 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
           </div>
         )}
 
+        {failedFiles > 0 && (
+          <Alert variant="warning" title="Some files are not included">
+            {failedFiles === 1 ? "One file" : `${failedFiles} files`} could not be read and will not be part of the marking. See the file cards above for the reason, then remove or replace {failedFiles === 1 ? "it" : "them"}.
+          </Alert>
+        )}
+
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" onClick={handleAnonymise} disabled={!rawSubmission.trim()}>
+          <Button type="button" onClick={handleAnonymise} disabled={parts.length === 0 || extracting}>
             Anonymise
           </Button>
           {hasAnonymised && counts && <p className="text-sm font-medium">{summariseCounts(counts)}</p>}

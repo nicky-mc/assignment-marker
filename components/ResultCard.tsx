@@ -11,6 +11,14 @@ import { cn } from "@/lib/utils";
 export interface Evidence {
   type: "quote" | "absence";
   text: string;
+  /** The label of the part of the submission the quote came from, when the submission had several parts. */
+  from?: string;
+}
+
+/** A link that was part of the submission. AssisTED never opens links. */
+export interface NotOpenedLink {
+  label: string;
+  kind: string;
 }
 
 export interface MarkOutcome {
@@ -21,7 +29,8 @@ export interface MarkOutcome {
   capped: boolean;
   topicMismatch: boolean;
   mismatchReason: string;
-  presenceEvidence?: { criterion: string; level: "required" | "stretch"; quote: string | null; met: boolean }[];
+  presenceEvidence?: { criterion: string; level: "required" | "stretch"; quote: string | null; met: boolean; from?: string }[];
+  links?: NotOpenedLink[];
   feedback: {
     recognition: string;
     explanation: string;
@@ -38,7 +47,11 @@ export interface MarkOutcome {
 
 import type { CompleteOutcome } from "@/lib/markingComplete";
 
-export type CompleteResult = CompleteOutcome & { rubric?: { version: number; source: "file" | "database" } };
+export type CompleteResult = Omit<CompleteOutcome, "checklist"> & {
+  checklist: (CompleteOutcome["checklist"][number] & { from?: string })[];
+  links?: NotOpenedLink[];
+  rubric?: { version: number; source: "file" | "database" };
+};
 export type ResultData = MarkOutcome | CompleteResult;
 
 export function isCompleteResult(r: ResultData): r is CompleteResult {
@@ -96,6 +109,7 @@ function QuoteBlock({ evidence, id }: { evidence: Evidence; id: string }) {
   return (
     <blockquote id={id} className={`border-l-4 border-surface-border bg-field rounded-r-[10px] px-3 py-2 ${READABLE}`}>
       <span className="block text-sm font-semibold">Quote</span>
+      {evidence.from && <span className="block text-sm text-ink-2">From: {evidence.from}</span>}
       <span className="block text-sm whitespace-pre-line">
         &ldquo;<QuoteText text={evidence.text} />&rdquo;
       </span>
@@ -158,6 +172,23 @@ function EvidenceRow({
       )}
       {expanded && children && <div className="px-3 pb-3">{children}</div>}
     </li>
+  );
+}
+
+function NotOpenedList({ links }: { links?: NotOpenedLink[] }) {
+  if (!links || links.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <h3 className="font-heading text-lg font-semibold">Not opened, please check</h3>
+      <p className={`text-sm ${READABLE}`}>AssisTED does not open links, so nothing in these was marked.</p>
+      <ul className="list-disc pl-5">
+        {links.map((l, i) => (
+          <li key={i} className={READABLE}>
+            {l.label} <span className="text-sm text-ink-2">({l.kind})</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -331,13 +362,15 @@ function BandedResultCard({
                       expanded={!!open[key]}
                       onToggle={hasQuote ? () => toggle(key) : undefined}
                     >
-                      {hasQuote && <QuoteBlock evidence={{ type: "quote", text: p.quote! }} id={panelId} />}
+                      {hasQuote && <QuoteBlock evidence={{ type: "quote", text: p.quote!, from: p.from }} id={panelId} />}
                     </EvidenceRow>
                   );
                 })}
               </ul>
             </div>
           )}
+
+          <NotOpenedList links={result.links} />
 
           {evidenceKeys.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -477,12 +510,14 @@ function CompleteResultCard({
                     expanded={!!open[key]}
                     onToggle={hasQuote ? () => toggle(key) : undefined}
                   >
-                    {hasQuote && <QuoteBlock evidence={{ type: "quote", text: l.quote! }} id={panelId} />}
+                    {hasQuote && <QuoteBlock evidence={{ type: "quote", text: l.quote!, from: l.from }} id={panelId} />}
                   </EvidenceRow>
                 );
               })}
             </ul>
           </div>
+
+          <NotOpenedList links={result.links} />
 
           {result.needsMarkerCheck.length > 0 && (
             <div className="flex flex-col gap-1">

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-08: Several files, pasted text and links, each labelled
+
+- The marking form takes up to 8 files (picker or drag and drop; 5 MB in total), pasted text, and up to 5 optional links, each with a label (suggestions come from the assignment's checklist or requirements). A file that could not be read stays visible with the reason and is left out. Links are never opened: only the label and the kind of site go into the text; the web address is never sent, stored or logged.
+- `lib/submissionParts.ts` assembles labelled parts ("=== PART n: label (file) ===" then a links section), anonymising each part with the same confirmed names. Exactly one file or pasted text with no links is sent exactly as before, with no headers. The route finds which part each quote came from and `ResultCard` shows "From: label", plus a "Not opened, please check" list.
+- One sentence added to the banded and complete-mode instructions about labelled parts and links. Banded scoring, schema and tone guide are unchanged.
+- Checks: `scripts/check-submission-parts.ts` (27, no API calls), `tsc`, lint, build; two live calls (single file mark matched the previous run, three-part quotes carried the right labels). Not looked at in a browser.
+
 ## 2026-10-08: Marking path for complete / not complete rubrics
 
 - New `lib/markingComplete.ts`, called by `/api/mark` when a rubric's grading mode is complete (replaces the "not supported yet" guard). The model returns per-line checklist evidence (verbatim quote, met, cannotVerify), then reasoning, then feedback and marker notes. The outcome is derived in code: a line counts as met only if its quote is found in the submission (case and whitespace ignored); the work is "complete" if every verifiable line is met, otherwise "not complete"; lines that cannot be checked from the text never cause "not complete" and are listed as needing the marker's check. No score, band, borderline or ceiling.
