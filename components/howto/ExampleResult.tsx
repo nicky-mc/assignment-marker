@@ -20,7 +20,7 @@ export default function ExampleResult() {
   const [copied, setCopied] = useState(false);
   return (
     <ResultCard
-      result={EXAMPLE_RESULT as MarkOutcome}
+      result={EXAMPLE_RESULT as unknown as MarkOutcome}
       editableFeedback={text}
       onFeedbackChange={setText}
       aiDraft={draft}

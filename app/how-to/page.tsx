@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronDown, CircleHelp, EyeOff, ListChecks, MessageSquareQuote, Scale, ShieldCheck } from "lucide-react";
+import { ChevronDown, CircleHelp, EyeOff, ListChecks, MessageSquareQuote, ShieldCheck } from "lucide-react";
 import PageShell from "@/components/PageShell";
 import { HeroCard } from "@/components/HeroCard";
 import { buttonVariants } from "@/components/ui/button";
 import ExampleResult from "@/components/howto/ExampleResult";
 import { AddIllustration, MarkIllustration, NamesIllustration, PickIllustration, ResultIllustration } from "@/components/howto/Illustrations";
-import { HOW_TO } from "@/content/how-to";
+import { ANONYMISING, HOW_TO } from "@/content/how-to";
+import BeforeAfter from "@/components/howto/BeforeAfter";
 import { requirePageAccess } from "@/lib/auth/pageAccess";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "How to use AssisTED" };
 
 const ILLUSTRATIONS = [PickIllustration, AddIllustration, NamesIllustration, MarkIllustration, ResultIllustration];
-const GOOD_TO_KNOW_ICONS = [Scale, MessageSquareQuote, ListChecks, EyeOff, ShieldCheck, CircleHelp];
+const GOOD_TO_KNOW_ICONS = [MessageSquareQuote, ListChecks, EyeOff, ShieldCheck, CircleHelp];
 const ON_PURPLE_PRIMARY = "border-brand-secondary bg-brand-secondary text-brand-primary hover:bg-brand-secondary/90";
 
 // Gentle entrance: each block rises a little as it appears. Switched off for reduced motion (see app/globals.css).
@@ -71,6 +72,7 @@ export default async function HowToPage() {
                       </h3>
                     </div>
                     <p className="max-w-[60ch] text-base">{step.body}</p>
+                    {"note" in step && step.note && <p className="max-w-[60ch] text-base font-medium">{step.note}</p>}
                   </div>
                   <div className={cn("flex justify-center", i % 2 === 1 && "min-[640px]:order-1")}>
                     <Art />
@@ -80,6 +82,67 @@ export default async function HowToPage() {
             );
           })}
         </ol>
+      </section>
+
+      <section aria-labelledby="anon-heading" className="flex flex-col gap-4">
+        <SectionHeading id="anon-heading">{L.anonymiseHeading}</SectionHeading>
+        <p className="max-w-[70ch]">{ANONYMISING.intro}</p>
+        <BeforeAfter />
+
+        <div className="grid gap-4 min-[760px]:grid-cols-2">
+          <article className={CARD}>
+            <h3 className="font-heading text-lg font-semibold">{ANONYMISING.caughtHeading}</h3>
+            <ul className="mt-2 flex flex-col gap-2">
+              {ANONYMISING.caught.map((c) => (
+                <li key={c.what} className="flex flex-col gap-1 text-base">
+                  <span>{c.what}</span>
+                  <span className="w-fit rounded border border-surface-border bg-muted px-1 text-[12px] leading-5 font-medium text-ink-2">
+                    <span className="sr-only">Replaced with </span>
+                    {c.placeholder}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className={CARD}>
+            <h3 className="font-heading text-lg font-semibold">{ANONYMISING.missedHeading}</h3>
+            <ul className="mt-2 flex list-disc flex-col gap-2 pl-5 text-base">
+              {ANONYMISING.missedList.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          </article>
+        </div>
+
+        <article className={CARD}>
+          <h3 className="font-heading text-lg font-semibold">{ANONYMISING.stepsHeading}</h3>
+          <ol className="mt-2 flex flex-col gap-3">
+            {ANONYMISING.steps.map((step, i) => (
+              <li key={step} className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-primary font-heading text-sm font-semibold text-brand-secondary dark:bg-brand-secondary dark:text-brand-primary">
+                  {i + 1}
+                </span>
+                <p className="max-w-[65ch] text-base">
+                  <span className="sr-only">Step {i + 1}: </span>
+                  {step}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </article>
+
+        <aside aria-labelledby="why-heading" className="purple-card rounded-[14px] p-5">
+          <h3 id="why-heading" className="font-heading text-xl font-semibold text-purple-title">
+            {ANONYMISING.whyHeading}
+          </h3>
+          <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-base">
+            {ANONYMISING.why.map((w) => (
+              <li key={w} className="max-w-[70ch]">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </aside>
       </section>
 
       <section aria-labelledby="know-heading" className="flex flex-col gap-4">

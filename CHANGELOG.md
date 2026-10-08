@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-08: How to page: no borderline or score wording, and a section on checking what is hidden
+
+- Removed the Borderline card and the score and borderline fields from the page's example result, so the example shows the mark only. Added "Staff will review the evidence and agree or not as appropriate." under step 5.
+- New section "Check what is hidden before you mark": a before and after example using invented text (the "after" block is produced by the real anonymiser when the page renders), lists of what is hidden and what can be missed, steps for redacting in the Edit view of Check the preview, and a "Why we review it" box. `scripts/check-how-to-example.ts` fails if the code starts hiding something the page says it misses, or if banned wording or dashes appear. Copy and layout only: marking logic, the result schema and `lib/anonymise.ts` are untouched.
+
 ## 2026-10-08: How to use AssisTED page
 
 - New `/how-to` page (same sign-in rules as the other pages): a friendly header with Start marking, five numbered step cards with small original SVG illustrations, Good to know cards, an example result card with made-up data labelled "Example, not real marking", a keyboard-operable FAQ, and Start marking again at the bottom. Linked from the header menu and from "First time? See how it works" on the marking page.

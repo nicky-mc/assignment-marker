@@ -25,10 +25,10 @@ export const HOW_TO = {
     {
       title: "Read the result",
       body: "There are two parts. Notes for you give the reasoning and the quotes it found in the work. Feedback for the learner is warm, plain and ends with next steps. Edit anything you like before you use it.",
+      note: "Staff will review the evidence and agree or not as appropriate.",
     },
   ],
   goodToKnow: [
-    { title: "Borderline", body: "The work sits between two marks. Take a closer look yourself before deciding." },
     { title: "Reflections", body: "If the work includes one, the feedback mentions it. A missing reflection never lowers a mark." },
     {
       title: "Complete or Not complete",
@@ -54,6 +54,7 @@ export const HOW_TO = {
   labels: {
     start: "Start marking",
     stepsHeading: "The five steps",
+    anonymiseHeading: "Check what is hidden before you mark",
     goodToKnowHeading: "Good to know",
     exampleHeading: "What a result looks like",
     exampleIntro: "Here is an example with made-up details, so you can see how to read one.",
@@ -65,9 +66,7 @@ export const HOW_TO = {
 
 // A made-up result for the example card. Every name, quote and mark here is invented.
 export const EXAMPLE_RESULT = {
-  rawScore: 3,
   mark: 3,
-  borderline: false,
   ceilingBand: 4,
   capped: false,
   topicMismatch: false,
@@ -106,3 +105,58 @@ export const EXAMPLE_RESULT = {
     ],
   },
 };
+
+// The "Check what is hidden before you mark" section. The learner text below is invented. The "what AssisTED sends"
+// block is produced by the real anonymiser when the page renders, so it cannot drift from what the code does.
+// scripts/check-how-to-example.ts fails if the code starts hiding something listed in `missed`, so this text gets updated.
+export const ANONYMISING = {
+  intro:
+    "AssisTED hides the details it can recognise before anything is sent for marking. It cannot recognise everything, so a person always reviews the text first.",
+  beforeLabel: "What the learner wrote",
+  afterLabel: "What AssisTED sends",
+  before: [
+    "Hi, I'm Jo Example.",
+    "I run Sunny Side Bakery in Westbury and share photos on Instagram as @sunnysidebakes.",
+    "My shop is at 14 Mill Lane, BA13 4AA. You can email me at jo@sunnysidebakery.co.uk or ring 07700 900123.",
+    "My neighbour Priya Shah helps on Saturdays, and our menu is at www.sunnysidebakes.shop.",
+  ].join("\n"),
+  // Text the code leaves visible in the example, each with a label shown beside it in the "sends" block.
+  missed: [
+    { text: "Sunny Side Bakery", label: "business name" },
+    { text: "Westbury", label: "town" },
+    { text: "Priya Shah", label: "someone else's name" },
+    { text: "www.sunnysidebakes.shop", label: "website" },
+  ],
+  caughtHeading: "What AssisTED hides for you",
+  caught: [
+    { what: "Names after patterns such as \"Hi, I'm\" or \"My name is\", sign-offs, and lines like \"Name:\". Also any name you add to Names to remove, wherever it appears", placeholder: "[NAME]" },
+    { what: "Email addresses", placeholder: "[EMAIL]" },
+    { what: "Phone numbers", placeholder: "[PHONE]" },
+    { what: "Web addresses, common website names and @handles", placeholder: "[LINK]" },
+    { what: "Street addresses and postcodes", placeholder: "[ADDRESS] [POSTCODE]" },
+    { what: "ID numbers, such as National Insurance numbers, sort codes and long account numbers", placeholder: "[ID]" },
+    { what: "Business words you choose to redact in the suggestions list", placeholder: "[BUSINESS]" },
+  ],
+  missedHeading: "What AssisTED can miss",
+  missedList: [
+    "Business names that were not added to the form",
+    "Towns, cities and other places",
+    "Names of other people, such as a neighbour, client or colleague",
+    "Websites with an unusual ending, such as .shop",
+    "A social media handle written without the @",
+  ],
+  stepsHeading: "How to redact what was missed",
+  steps: [
+    "Press Anonymise, then read the text in Check the preview. The Highlighted view shows what was replaced.",
+    "Look for anything identifying that is still visible.",
+    "Switch to Edit and replace it with a neutral label such as [business name], [town] or [handle]. Replace only the identifying words, not whole sentences, so the work can still be judged.",
+    "If you are unsure, redact it. A label costs nothing, a leaked name cannot be taken back.",
+    "Tick the box to confirm you have checked the preview. If you edit the text again, tick it again.",
+  ],
+  whyHeading: "Why we review it",
+  why: [
+    "Automatic hiding only finds patterns it has been taught. Names of businesses, places and people that were not typed into the form look like ordinary words to it.",
+    "Learners' work is personal data, and submissions often mention third parties who never agreed to be included.",
+    "The human review is the check that keeps AssisTED in line with our data protection responsibilities, and it is quick once it becomes habit.",
+  ],
+} as const;
