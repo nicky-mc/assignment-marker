@@ -7,7 +7,7 @@ import { Eye, EyeOff, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import Alert from "./Alert";
 import SegmentedControl from "./SegmentedControl";
-import ResultCard, { type MarkOutcome } from "./ResultCard";
+import ResultCard, { isCompleteResult, type ResultData } from "./ResultCard";
 import { AppCard } from "./AppCard";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -18,8 +18,12 @@ import { Textarea } from "./ui/textarea";
 
 type StepKey = "course" | "submission" | "anonymise" | "preview";
 
-function buildFeedbackText(result: MarkOutcome): string {
+function buildFeedbackText(result: ResultData): string {
   const lines: string[] = [];
+  // A complete / not complete result starts with its outcome, so the copied text carries it.
+  if (isCompleteResult(result)) {
+    lines.push(`Outcome: ${result.outcome === "complete" ? "Complete" : "Not yet complete"}`, "");
+  }
   if (result.topicMismatch) {
     lines.push(result.mismatchReason, "");
   }
@@ -136,7 +140,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
   const abortRef = useRef<AbortController | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const [marking, setMarking] = useState(false);
-  const [result, setResult] = useState<MarkOutcome | null>(null);
+  const [result, setResult] = useState<ResultData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editableFeedback, setEditableFeedback] = useState("");
   const [extracting, setExtracting] = useState(false);
@@ -286,7 +290,7 @@ export default function MarkingForm({ courses, rubrics }: { courses: CourseOptio
       if (!res.ok) {
         throw new Error(data.error ?? "Marking failed");
       }
-      const outcome = data as MarkOutcome;
+      const outcome = data as ResultData;
       setResult(outcome);
       setEditableFeedback(buildFeedbackText(outcome));
     } catch (err) {

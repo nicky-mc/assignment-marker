@@ -1,5 +1,6 @@
 import { getRubric, RubricStoreError } from "@/lib/rubricStore";
 import { markSubmission } from "@/lib/marking";
+import { markComplete } from "@/lib/markingComplete";
 import { getAccess } from "@/lib/auth/access";
 import { checkRateLimit, DRAFT_TRIES_PER_HOUR, MARKS_PER_HOUR } from "@/lib/auth/rateLimit";
 import { getDraftRow, rowToInput } from "@/lib/rubricAdmin/store";
@@ -70,16 +71,9 @@ export async function POST(request: Request) {
     return Response.json({ error: `Unknown rubricId: ${rubricId}` }, { status: 400 });
   }
 
-  // Complete / not complete rubrics are not markable yet. Refuse clearly here; never fall through to a banded mark.
-  if (rubric.gradingMode === "complete") {
-    return Response.json(
-      { error: "This assignment is graded complete / not complete, which is not supported yet. Nothing was marked." },
-      { status: 501 },
-    );
-  }
-
   try {
-    const outcome = await markSubmission(rubric, anonymisedSubmission);
+    // Complete / not complete rubrics have their own path; the banded path below is unchanged.
+    const outcome = rubric.gradingMode === "complete" ? await markComplete(rubric, anonymisedSubmission) : await markSubmission(rubric, anonymisedSubmission);
     return Response.json({ ...outcome, rubric: { version: rubric.version, source: rubric.source, ...(wantsDraft ? { draft: true } : {}) } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error while marking";
