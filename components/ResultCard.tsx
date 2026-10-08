@@ -22,9 +22,7 @@ export interface NotOpenedLink {
 }
 
 export interface MarkOutcome {
-  rawScore: number;
   mark: number;
-  borderline: boolean;
   ceilingBand: number;
   capped: boolean;
   topicMismatch: boolean;
@@ -57,6 +55,9 @@ export type ResultData = MarkOutcome | CompleteResult;
 export function isCompleteResult(r: ResultData): r is CompleteResult {
   return (r as CompleteResult).gradingMode === "complete";
 }
+
+// One muted line under the mark, in banded and Complete / Not complete results.
+const STAFF_REVIEW_LINE = "Staff will review the evidence and agree or not as appropriate.";
 
 const READABLE = "max-w-[70ch] break-words";
 
@@ -309,6 +310,7 @@ function BandedResultCard({
             {result.mark}/4
           </p>
         )}
+        <p className="text-[13px]">{STAFF_REVIEW_LINE}</p>
         {(result.capped || result.topicMismatch) && (
           <ul className="flex flex-wrap gap-2" aria-label="Flags">
             {result.capped && <SummaryBadge glyph="▼">Capped</SummaryBadge>}
@@ -461,6 +463,7 @@ function CompleteResultCard({
             {complete ? "Complete" : "Not complete"}
           </p>
         )}
+        <p className="text-[13px]">{STAFF_REVIEW_LINE}</p>
         <ul className="flex flex-wrap gap-2" aria-label="Flags">
           <SummaryBadge glyph={complete ? "✓" : "○"}>{complete ? "Complete" : "Not complete"}</SummaryBadge>
           {result.needsMarkerCheck.length > 0 && <SummaryBadge glyph="?">Needs your check</SummaryBadge>}

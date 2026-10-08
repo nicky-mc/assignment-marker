@@ -82,6 +82,27 @@ const cases: Case[] = [
     gone: ["janedoe"],
   },
   {
+    label: "bare www address, any ending",
+    input: "Our menu is at www.sunnysidebakes.bakery today",
+    gone: ["sunnysidebakes"],
+  },
+  {
+    label: "bare www address with a path and an unknown ending",
+    input: "See www.example.zzz/menu/today for more",
+    gone: ["example.zzz", "menu"],
+  },
+  {
+    label: "www address at the end of a sentence",
+    input: "Our menu is at www.sunnysidebakes.bakery.",
+    gone: ["sunnysidebakes"],
+    kept: ["menu is at"],
+  },
+  ...["shop", "store", "blog", "online", "site", "eu", "co.uk", "org.uk", "io", "app", "me", "uk"].map((tld) => ({
+    label: `website ending .${tld}`,
+    input: `Find us at sunnysidebakes.${tld} any time`,
+    gone: ["sunnysidebakes"],
+  })),
+  {
     label: "social handle",
     input: "Follow me @janedoe on socials",
     gone: ["janedoe"],
@@ -151,6 +172,21 @@ const cases: Case[] = [
     kept: ["does not agree"],
   },
   // ---- must be left alone (over-redaction guards) ----
+  {
+    label: "a site that is not written as an address",
+    input: "I visited the shop. Online sales rose on the site and in the store.",
+    kept: ["shop. Online", "the site and in the store"],
+  },
+  {
+    label: "the letters www on their own",
+    input: "The www prefix is rarely needed now.",
+    kept: ["www prefix"],
+  },
+  {
+    label: "an unknown ending without www is left (a person must check it)",
+    input: "Our menu is at sunnysidebakes.bakery",
+    kept: ["sunnysidebakes.bakery"],
+  },
   {
     label: "heading: Privacy Law",
     input: "Privacy Law\nSome content about GDPR and consent.",

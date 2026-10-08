@@ -24,7 +24,7 @@ const CARD = "rounded-[14px] border-2 border-surface-border bg-surface p-5 text-
 
 function SectionHeading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="mt-4 font-heading text-2xl font-semibold text-ink">
+    <h2 id={id} className="mt-4 scroll-mt-4 font-heading text-2xl font-semibold text-ink">
       {children}
     </h2>
   );
@@ -71,7 +71,17 @@ export default async function HowToPage() {
                         {step.title}
                       </h3>
                     </div>
-                    <p className="max-w-[60ch] text-base">{step.body}</p>
+                    <p className="max-w-[60ch] text-base">
+                      {step.body}
+                      {"link" in step && step.link && (
+                        <>
+                          {" "}
+                          <a href={step.link.href} className="font-medium underline underline-offset-4 hover:no-underline">
+                            {step.link.text}
+                          </a>
+                        </>
+                      )}
+                    </p>
                     {"note" in step && step.note && <p className="max-w-[60ch] text-base font-medium">{step.note}</p>}
                   </div>
                   <div className={cn("flex justify-center", i % 2 === 1 && "min-[640px]:order-1")}>

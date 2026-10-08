@@ -10,9 +10,7 @@ function Missed({ label, children }: { label: string; children: string }) {
     <span>
       <mark className="rounded-sm bg-draft px-1 font-semibold text-draft-ink underline decoration-wavy decoration-2 underline-offset-4 [overflow-wrap:anywhere]">{children}</mark>{" "}
       <span className="ml-1 inline-block rounded-full border-2 border-draft-ink px-1.5 py-0.5 align-middle text-[11px] leading-4 font-semibold text-ink">
-        <span className="sr-only">Not hidden: </span>
-        <span aria-hidden="true">Not hidden: </span>
-        {label}
+        Not hidden: {label}
       </span>
     </span>
   );
