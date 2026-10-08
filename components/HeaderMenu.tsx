@@ -18,6 +18,7 @@ export default async function HeaderMenu() {
   const links: MenuLink[] = [
     { href: "/", label: "Mark" },
     { href: "/rubrics", label: "Rubric library" },
+    { href: "/how-to", label: "How to use AssisTED" },
   ];
   // Admins only, decided here on the server. Markers never see it, and with sign-in off there are no roles.
   if (authOn && access.role === "admin") links.push({ href: "/admin/users", label: "Manage users" });

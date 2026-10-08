@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-08: How to use AssisTED page
+
+- New `/how-to` page (same sign-in rules as the other pages): a friendly header with Start marking, five numbered step cards with small original SVG illustrations, Good to know cards, an example result card with made-up data labelled "Example, not real marking", a keyboard-operable FAQ, and Start marking again at the bottom. Linked from the header menu and from "First time? See how it works" on the marking page.
+- All wording is in `content/how-to.ts`. Gentle entrance motion only, switched off for reduced motion. No analytics, no API calls. Marking logic, rubrics and the database are untouched.
+- Checked: `tsc`, lint, `npm run build` (route dynamic), and a look in light and dark mode at phone and desktop-ish widths.
+
 ## 2026-10-08: Several files, pasted text and links, each labelled
 
 - The marking form takes up to 8 files (picker or drag and drop; 5 MB in total), pasted text, and up to 5 optional links, each with a label (suggestions come from the assignment's checklist or requirements). A file that could not be read stays visible with the reason and is left out. Links are never opened: only the label and the kind of site go into the text; the web address is never sent, stored or logged.

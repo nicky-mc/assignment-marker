@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import Alert from "@/components/Alert";
 import PageShell from "@/components/PageShell";
 import { HeroCard } from "@/components/HeroCard";
@@ -26,6 +27,11 @@ export default async function Home() {
         <HeroCard
           icon={<Image src="/te-monogram.png" alt="" width={30} height={46} className="h-9 w-auto" />}
           title="AssisTED"
+          note={
+            <Link href="/how-to" className="font-medium text-brand-secondary underline underline-offset-4 hover:no-underline">
+              First time? See how it works
+            </Link>
+          }
         >
           Assistant to help grade learner submissions against Tech Educators Rubrics
         </HeroCard>

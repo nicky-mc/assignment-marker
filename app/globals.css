@@ -301,3 +301,20 @@
     color: var(--ink);
   }
 }
+
+/* Gentle entrance for the How to page: blocks rise a few pixels and fade in. Not applied when reduced motion is on. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes how-to-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .how-to-rise {
+    animation: how-to-rise 420ms ease-out var(--rise-delay, 0ms) both;
+  }
+}
